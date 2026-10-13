@@ -12,8 +12,11 @@ let state = {
   itinerarySwapped: false
 };
 
+const TOMTOM_API_KEY = "0SlQ1qDIjraxDmZOR7GJosJv5rTjKLT6";
 let map;
 let mapMarkers = {};
+let tomtomTrafficLayer = null;
+let tomtomTrafficVisible = true;
 
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
@@ -23,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initJudgePlaybook();
 });
 
-// 1. Leaflet Map Initialization
+// 1. Leaflet Map Initialization with TomTom Traffic Layer
 function initMap() {
   // Centered on Udaipur Old City & Lakes
   map = L.map('leafletMap', {
@@ -32,12 +35,27 @@ function initMap() {
     zoomControl: true
   });
 
-  // Warm minimal map tiles (CartoDB Positron / OSM style)
+  // Base warm minimal map tiles (CartoDB Positron / OSM style)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19
   }).addTo(map);
+
+  // TomTom Live Traffic Flow Tile Layer
+  try {
+    tomtomTrafficLayer = L.tileLayer(`https://{s}.api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${TOMTOM_API_KEY}`, {
+      attribution: '&copy; <a href="https://www.tomtom.com" target="_blank">TomTom</a> Live Traffic',
+      subdomains: ['a', 'b', 'c', 'd'],
+      opacity: 0.85,
+      maxZoom: 19
+    }).addTo(map);
+  } catch (e) {
+    console.warn("TomTom Traffic Layer initialization note:", e);
+  }
+
+  // Fetch live flow segment telemetry
+  fetchTomTomLiveTraffic();
 
   // Add markers for all destinations
   UDAIPUR_DESTINATIONS.forEach(dest => {
@@ -46,6 +64,30 @@ function initMap() {
     marker.addTo(map);
     mapMarkers[dest.id] = marker;
   });
+}
+
+// Fetch live telemetry from TomTom Traffic Segment API for City Palace access road
+async function fetchTomTomLiveTraffic() {
+  try {
+    const url = `https://api.tomtom.com/traffic/services/4/flowSegmentData/relative0/10/json?point=24.5764,73.6835&key=${TOMTOM_API_KEY}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      const flow = data.flowSegmentData;
+      if (flow) {
+        const curSpeed = flow.currentSpeed || 15;
+        const freeSpeed = flow.freeFlowSpeed || 18;
+        const delay = Math.max(0, (flow.currentTravelTime || 0) - (flow.freeFlowTravelTime || 0));
+        const delayMins = Math.round(delay / 60);
+        const delayEl = document.getElementById("trafficDelayVal");
+        if (delayEl) {
+          delayEl.textContent = `+${delayMins} min delay (Speed: ${curSpeed} km/h vs Free-flow: ${freeSpeed} km/h)`;
+        }
+      }
+    }
+  } catch (err) {
+    console.log("TomTom live telemetry note:", err);
+  }
 }
 
 function createCustomMarker(dest, crowdData) {
@@ -282,6 +324,27 @@ function initControls() {
   document.getElementById("heroRedirectBtn").addEventListener("click", () => {
     openAlternativeModal("UDR_001");
   });
+
+  // TomTom Traffic Layer Toggle
+  const toggleBtn = document.getElementById("toggleTomTomBtn");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      tomtomTrafficVisible = !tomtomTrafficVisible;
+      if (tomtomTrafficVisible) {
+        if (tomtomTrafficLayer && !map.hasLayer(tomtomTrafficLayer)) {
+          tomtomTrafficLayer.addTo(map);
+        }
+        toggleBtn.textContent = "🚦 TomTom Traffic: ON";
+        toggleBtn.style.background = "#10B981";
+      } else {
+        if (tomtomTrafficLayer && map.hasLayer(tomtomTrafficLayer)) {
+          map.removeLayer(tomtomTrafficLayer);
+        }
+        toggleBtn.textContent = "🚦 TomTom Traffic: OFF";
+        toggleBtn.style.background = "#64748B";
+      }
+    });
+  }
 }
 
 function refreshAll() {
