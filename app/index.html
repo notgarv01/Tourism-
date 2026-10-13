@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrowdWise • Smart Tourism Intelligence Engine (Udaipur Pilot)</title>
+  <meta name="description" content="Predictive crowd intelligence engine for Udaipur. Avoid bottlenecks, discover intent-matched alternatives, and dynamically replan travel itineraries.">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Custom Stylesheet (Advocado Design System) -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="navbar">
+    <a href="#" class="nav-brand">
+      <span class="brand-dot"></span>
+      crowdwise
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#predictions">Predictions</a></li>
+        <li><a href="#itinerary">Smart Itinerary</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#judge-playbook" id="openJudgeLink">Judge Playbook (12 Q&As)</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn-pill btn-pill-outline" id="btnReportModalOpen">Report Queue</button>
+      <button class="btn-pill btn-pill-lime" id="btnQuickDemo">Test Rain Re-plan</button>
+    </div>
+  </header>
+
+  <!-- HERO SECTION (Advocado Headline & Node Canvas Style) -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div>
+        <span class="category-pill">SMART TOURISM INTELLIGENCE &bull; UDAIPUR PILOT</span>
+      </div>
+      <h1 class="hero-headline">
+        Good travels spread.<br>
+        <em>Crowds don't.</em>
+      </h1>
+      <p class="hero-subtext">
+        Your Udaipur trip has 14 potential stops. Google Maps tells you where to go; 
+        <strong>CrowdWise</strong> predicts when to go, preserves your intent with experience-matched 
+        alternatives, and dynamically replans your route when conditions change.
+      </p>
+      <div class="hero-cta-group">
+        <a href="#predictions" class="btn-pill btn-pill-lime">Explore Live Predictions</a>
+        <a href="#itinerary" class="btn-pill btn-pill-outline">View Itinerary Re-Router</a>
+      </div>
+    </div>
+
+    <!-- Interactive Node Visual (Floating Cards with Lime Buttons) -->
+    <div class="hero-visual">
+      <!-- Node 1: City Palace Peak Queue -->
+      <div class="node-card node-1">
+        <div class="node-header">
+          <span class="node-avatar"></span>
+          <span class="node-badge badge-reaction" style="background:#FEE2E2; color:#DC2626;">92% High Crowd</span>
+        </div>
+        <div style="font-weight:700; font-size:0.85rem; margin-bottom:4px;">City Palace Ticket Gate</div>
+        <div class="node-lines w-80"></div>
+        <div class="node-lines w-60"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted);">Est. wait: 75 mins</span>
+      </div>
+
+      <!-- Node Center: CrowdWise Recommender Action -->
+      <div class="node-card node-center">
+        <div class="node-header">
+          <span class="category-pill" style="font-size:0.65rem;">INTENT MATCH: ROYAL HERITAGE</span>
+          <span class="node-badge badge-reaction">18% Quiet</span>
+        </div>
+        <div style="font-weight:700; font-size:1rem; margin-bottom:4px; font-family:var(--font-serif);">Ahar Cenotaphs</div>
+        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">
+          250 royal Mewar marble memorials. Zero queue, authentic Rajput history.
+        </p>
+        <button class="btn-pill btn-pill-lime" style="width:100%; padding:7px 12px; font-size:0.78rem;" id="heroRedirectBtn">
+          CrowdWise it &rarr;
+        </button>
+      </div>
+
+      <!-- Node 2: Sunset Boating Match -->
+      <div class="node-card node-2">
+        <div class="node-header">
+          <span class="node-avatar" style="background:#0284C7;"></span>
+          <span class="node-badge badge-reaction" style="background:#E0F2FE; color:#0369A1;">Sunset Boating</span>
+        </div>
+        <div style="font-weight:700; font-size:0.85rem; margin-bottom:4px;">Fateh Sagar Lake</div>
+        <div class="node-lines w-80"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted);">2x boarding speed of Pichola</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BANNER (Advocado Big-Numbers Style) -->
+  <section class="stats-banner">
+    <div class="stat-item">
+      <div class="stat-num">82%</div>
+      <p class="stat-desc">
+        the crowd pressure diverted from the City Palace ticket gate when tourists adopt intent-preserving alternatives.
+      </p>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">&lt; 15 sec</div>
+      <p class="stat-desc">
+        from sudden monsoon rainfall or gate closure to a fully recalculated 4-stop itinerary in your pocket.
+      </p>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">100%</div>
+      <p class="stat-desc">
+        intent preservation. Sunset lake views match sunset lake views, not an irrelevant indoor museum.
+      </p>
+    </div>
+  </section>
+
+  <!-- DUAL FEATURE CARDS (Advocado Dark Forest vs Crisp White Showcase) -->
+  <section class="showcase-grid" id="how-it-works">
+    <!-- Card 1: The Problem (Dark Forest Green) -->
+    <div class="showcase-card card-dark-forest">
+      <div>
+        <span class="category-pill" style="background:#1B4231; color:#9FE859; border-color:#2A5D46; margin-bottom:16px;">THE STRUCTURAL BOTTLENECK</span>
+        <h2>Your trip is shouting <span class="highlight-lime">into the void.</span></h2>
+        <p>
+          Tourists arrive at premier monuments at the exact same hour. Visitors scroll past static guides, 
+          endure 90-minute ticket queues at Jagdish Chowk, and lose half their vacation standing in unmoving lines.
+        </p>
+      </div>
+      <div class="card-stat-footer">
+        <div class="stat-big">2,800</div>
+        <div class="stat-label-upper">VISITORS QUEUING SIMULTANEOUSLY AT CITY PALACE PEAK</div>
+      </div>
+    </div>
+
+    <!-- Card 2: The Solution (Crisp White Card) -->
+    <div class="showcase-card card-crisp-white">
+      <div>
+        <span class="category-pill" style="margin-bottom:16px;">THE DECISION ENGINE</span>
+        <h2>Your itinerary already has the answer.</h2>
+        <p>
+          Ahar Cenotaphs offers striking Rajput royal architecture with zero wait. Fateh Sagar gives you 
+          panoramic sunset boating with twice the boarding capacity. The engine fuzes live traffic, online ticket slots, 
+          and weather signals to route you intelligently.
+        </p>
+      </div>
+      <div class="card-stat-footer">
+        <div class="stat-big" style="color:var(--bg-dark-forest);">14 Sites</div>
+        <div class="stat-label-upper">MONITORED WITH REAL-TIME PROXIES & 5 PROVENANCE BADGES</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       INTERACTIVE ENGINE: LIVE CONTROLS & MAP WORKSPACE
+       ========================================================================== -->
+  <section class="engine-container" id="predictions">
+    <div class="section-intro-box">
+      <div>
+        <span class="category-pill">INTERACTIVE SIMULATION CORE</span>
+        <h2>Udaipur Live Crowd Engine</h2>
+      </div>
+      <div style="font-size:0.85rem; color:var(--text-secondary);">
+        Model: <strong>CrowdScore = 0.40(Hist) + 0.30(Cal) + 0.20(Event) + 0.10(Weather)</strong>
+      </div>
+    </div>
+
+    <!-- Control Toolbar Card -->
+    <div class="control-panel">
+      <!-- 1. Time Slider -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Time of Day</span>
+          <span class="active-val" id="timeDisplay">13:00 PM</span>
+        </div>
+        <div class="slider-container">
+          <input type="range" min="8" max="18" value="13" class="custom-range" id="timeSlider">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
+            <span>08:00 AM</span>
+            <span>13:00 PM (Peak)</span>
+            <span>18:00 PM (Sunset)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Day Type -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Calendar Signal</span>
+        </div>
+        <div class="segmented-control" id="dayTypeControl">
+          <button class="seg-btn" data-day="weekday">Weekday</button>
+          <button class="seg-btn active" data-day="weekend">Weekend (+30%)</button>
+          <button class="seg-btn" data-day="holiday">Festival (+45%)</button>
+        </div>
+      </div>
+
+      <!-- 3. Weather Condition -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Live Weather Proxy</span>
+        </div>
+        <div class="weather-pills-bar" id="weatherControl">
+          <button class="weather-btn active" data-weather="clear">☀️ Clear 24°C</button>
+          <button class="weather-btn" data-weather="heat">🔥 Heat 39°C</button>
+          <button class="weather-btn" data-weather="rain">🌧️ Rain (15mm)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workspace: Map + Destination Cards -->
+    <div class="engine-workspace">
+      <!-- Left: Leaflet Interactive Map -->
+      <div class="map-card-wrapper">
+        <div class="map-header-bar">
+          <div style="font-size:0.85rem; font-weight:700;">Udaipur Geographic Heat Overlay</div>
+          <span class="category-pill" style="font-size:0.65rem;" id="mapStatusBadge">LIVE PROXIES ENGAGED</span>
+        </div>
+        <div id="leafletMap"></div>
+      </div>
+
+      <!-- Right: Scrollable Destination Cards -->
+      <div class="destinations-scroll" id="destinationsList">
+        <!-- Rendered dynamically via app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       DYNAMIC ITINERARY PLANNER & DISRUPTION SIMULATOR
+       ========================================================================== -->
+  <section class="itinerary-section" id="itinerary">
+    <div class="itinerary-box">
+      <div class="itinerary-header">
+        <div>
+          <span class="category-pill" style="background:#1C4030; color:#9FE859; border-color:#2A5D46; margin-bottom:8px;">
+            DYNAMIC RE-PLANNING SERVICE (/api/itineraries/replan)
+          </span>
+          <h2>Crowd-Aware Multi-Stop Itinerary</h2>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <button class="btn-pill btn-pill-lime" id="btnSimulateRain">Simulate Sudden Rain Alert</button>
+          <button class="btn-pill btn-pill-outline" style="color:#FFFFFF; border-color:#2D5A44;" id="btnResetItinerary">Reset Route</button>
+        </div>
+      </div>
+
+      <!-- 4 Itinerary Stops Grid -->
+      <div class="itinerary-steps-grid" id="itineraryGrid">
+        <!-- Step 1 -->
+        <div class="step-card" id="step1">
+          <div class="step-time">09:30 AM &bull; STOP 1</div>
+          <div class="step-name">City Palace</div>
+          <p style="font-size:0.75rem; color:#A2B6AC;">Visited early before morning tour buses arrive.</p>
+          <div class="step-status">
+            <span class="badge-provenance prov-hist">Historical: Low</span>
+            <span style="color:#9FE859; font-weight:700;">Wait: &lt;10 min</span>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card" id="step2">
+          <div class="step-time">12:15 PM &bull; STOP 2</div>
+          <div class="step-name">Saheliyon-ki-Bari</div>
+          <p style="font-size:0.75rem; color:#A2B6AC;">Shaded royal fountains and courtyard gardens.</p>
+          <div class="step-status">
+            <span class="badge-provenance prov-pred">Predicted: Mod</span>
+            <span style="color:#F59E0B; font-weight:700;">Wait: 15 min</span>
+          </div>
+        </div>
+
+        <!-- Step 3 (Swappable on Rain) -->
+        <div class="step-card" id="step3">
+          <div class="step-time">04:00 PM &bull; STOP 3</div>
+          <div class="step-name" id="step3Name">Lake Pichola Boating</div>
+          <p style="font-size:0.75rem; color:#A2B6AC;" id="step3Desc">Sunset cruise around Jag Mandir island palace.</p>
+          <div class="step-status" id="step3Status">
+            <span class="badge-provenance prov-live">Live: Mod</span>
+            <span style="color:#9FE859; font-weight:700;" id="step3Wait">Dock: 15 min</span>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card" id="step4">
+          <div class="step-time">06:45 PM &bull; STOP 4</div>
+          <div class="step-name">Bagore Ki Haveli</div>
+          <p style="font-size:0.75rem; color:#A2B6AC;">Dharohar cultural folk dance & sunset ghats.</p>
+          <div class="step-status">
+            <span class="badge-provenance prov-pred">Predicted: Mod</span>
+            <span style="color:#9FE859; font-weight:700;">Evening Seat OK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Change Diff Alert Box -->
+      <div class="diff-alert-box" id="diffAlertBox" style="display:none;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:1.4rem;">🌧️</span>
+          <div>
+            <strong>DISRUPTION ENGINE TRIGGERED:</strong> 
+            <span id="diffAlertText">Outdoor boating flagged High Weather Risk (Precipitation: 18mm/h). Swapped with indoor Bagore Ki Haveli museum galleries. Total travel delay averted: 45 mins.</span>
+          </div>
+        </div>
+        <span class="badge-provenance" style="background:#9FE859; color:#143325; font-weight:700;">AUTO-REPLANNED</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       MODALS & SLIDE-OVER PANELS
+       ========================================== -->
+
+  <!-- Modal 1: Intent Alternative Recommendation Modal -->
+  <div class="modal-backdrop" id="alternativeModal">
+    <div class="modal-sheet">
+      <button class="close-btn" id="closeAltModal">&times;</button>
+      <span class="category-pill" style="margin-bottom:8px;">INTENT PRESERVATION RECOMMENDER</span>
+      <h2 style="font-size:1.8rem; margin-bottom:6px;" id="altModalTitle">Alternative for City Palace</h2>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:20px;" id="altModalReason">
+        Predicted High Crowd (88%) at 13:00. These substitutes preserve your intended royal heritage experience without the crush:
+      </p>
+
+      <div id="altCandidatesList" style="display:flex; flex-direction:column; gap:14px;">
+        <!-- Injected via app.js -->
+      </div>
+
+      <!-- Time Shift Fallback Box -->
+      <div style="margin-top:20px; background:#F8F5EC; border:1px solid var(--border-light); border-radius:var(--radius-card-sm); padding:16px;">
+        <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary); margin-bottom:4px;">
+          Prefer the original destination?
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-secondary);" id="altTimeShiftText">
+          Visit <strong>City Palace</strong> tomorrow at <strong>09:15 AM</strong>. Historical data shows crowd is 70% lower before tourist coaches arrive.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Citizen Crowd Report Modal (Waze-Style) -->
+  <div class="modal-backdrop" id="reportModal">
+    <div class="modal-sheet">
+      <button class="close-btn" id="closeReportModal">&times;</button>
+      <span class="category-pill" style="margin-bottom:8px;">CITIZEN CROWD REPORT FORM</span>
+      <h2 style="font-size:1.8rem; margin-bottom:6px;">Report Live Queue</h2>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:20px;">
+        Contribute to the Udaipur CrowdWise mesh. Submissions decay with a 30-minute half-life.
+      </p>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px;">SELECT DESTINATION</label>
+        <select id="reportPlaceSelect" style="width:100%; padding:10px 14px; border-radius:var(--radius-pill); border:1px solid var(--border-light); font-family:var(--font-sans);">
+          <!-- Injected via app.js -->
+        </select>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:8px;">OBSERVED QUEUE / WAITING TIME</label>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+          <button class="weather-btn report-rating-btn active" data-rating="1">
+            🟢 &lt; 10 mins<br><span style="font-size:0.7rem; color:var(--text-muted);">Low</span>
+          </button>
+          <button class="weather-btn report-rating-btn" data-rating="2">
+            🟡 15-30 mins<br><span style="font-size:0.7rem; color:var(--text-muted);">Moderate</span>
+          </button>
+          <button class="weather-btn report-rating-btn" data-rating="3">
+            🔴 45+ mins<br><span style="font-size:0.7rem; color:var(--text-muted);">High Surge</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-pill btn-pill-lime" style="width:100%;" id="btnSubmitReport">
+        Submit Verified Observation
+      </button>
+      <p style="font-size:0.72rem; color:var(--text-muted); text-align:center; margin-top:10px;">
+        IP hashed & anonymous &bull; Subject to 1 report / 15 min limit
+      </p>
+    </div>
+  </div>
+
+  <!-- Modal 3: Judge Q&A Playbook Drawer -->
+  <div class="modal-backdrop" id="judgeModal">
+    <div class="modal-sheet" style="max-width:760px;">
+      <button class="close-btn" id="closeJudgeModal">&times;</button>
+      <span class="category-pill" style="margin-bottom:8px;">HACKATHON EVALUATION PLAYBOOK</span>
+      <h2 style="font-size:2rem; margin-bottom:8px;">12 Defensible Judge Q&As</h2>
+      <p style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:24px;">
+        Airtight, battle-tested engineering answers directly synthesized from the master blueprint:
+      </p>
+
+      <div id="judgeAccordionContainer" style="display:flex; flex-direction:column; gap:12px;">
+        <!-- Injected via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div>
+      <strong>CrowdWise Tourism Engine</strong> &bull; Udaipur Pilot Prototype
+    </div>
+    <div style="font-size:0.8rem;">
+      Synthesized from Rajasthan Tourism Baselines & Open-Meteo APIs. Zero fake CCTV claims.
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

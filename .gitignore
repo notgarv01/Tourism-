@@ -1,0 +1,15 @@
+# Dependencies / Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
