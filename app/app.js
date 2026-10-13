@@ -35,10 +35,10 @@ function initMap() {
     zoomControl: true
   });
 
-  // Base warm minimal map tiles (CartoDB Positron / OSM style)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd',
+  // Base map tiles using TomTom Map Display API (Uses your TomTom key, NO Carto watermark)
+  L.tileLayer(`https://{s}.api.tomtom.com/map/1/tile/basic/main/{z}/{x}/{y}.png?key=${TOMTOM_API_KEY}`, {
+    attribution: '&copy; <a href="https://www.tomtom.com" target="_blank">TomTom</a> Map Data',
+    subdomains: ['a', 'b', 'c', 'd'],
     maxZoom: 19
   }).addTo(map);
 
