@@ -25,7 +25,7 @@ const UDAIPUR_DESTINATIONS = [
       "16:00": 58, "17:00": 35, "18:00": 10
     },
     suggestedQuietSlot: "09:00 AM - 10:30 AM",
-    alternatives: ["UDR_006", "UDR_007"] // Ahar Cenotaphs, Bagore Ki Haveli
+    alternatives: ["UDR_008", "UDR_007", "UDR_006"] // Jagdish Mandir (150m away), Bagore Haveli, Ahar Cenotaphs
   },
   {
     id: "UDR_002",
@@ -170,6 +170,30 @@ const UDAIPUR_DESTINATIONS = [
     },
     suggestedQuietSlot: "10:00 AM - 01:00 PM",
     alternatives: ["UDR_001", "UDR_006"]
+  },
+  {
+    id: "UDR_008",
+    name: "Jagdish Mandir (Temple)",
+    subtitle: "1651 AD Indo-Aryan Carved Stone Temple",
+    category: "Heritage",
+    experienceTags: ["royal_architecture", "ancient_history", "stone_carvings", "cultural"],
+    primaryIntent: "royal_heritage",
+    coords: [24.5796, 73.6841],
+    openingHours: { open: "05:00", close: "22:00", lastEntry: "21:30" },
+    avgVisitDurationMin: 45,
+    ticketPriceInr: 0,
+    capacityCeiling: 1500,
+    fragilityIndex: 0.30,
+    accessibility: { wheelchair: "No (Steep staircase)", stairs: "32 stone steps" },
+    officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
+    description: "Majestic 375-year-old carved stone temple built by Maharana Jagat Singh, just 150 meters outside City Palace gate. Features intricate elephant friezes, serene atmosphere, and minimal queue (<10 mins). The ideal immediate walk-in heritage alternative when City Palace has a long queue!",
+    hourlyBaseline: {
+      "08:00": 20, "09:00": 30, "10:00": 42, "11:00": 48,
+      "12:00": 38, "13:00": 28, "14:00": 18, "15:00": 22,
+      "16:00": 36, "17:00": 52, "18:00": 62
+    },
+    suggestedQuietSlot: "12:30 PM - 03:30 PM",
+    alternatives: ["UDR_001", "UDR_007"]
   }
 ];
 

@@ -211,6 +211,30 @@
       </div>
     </div>
 
+    <!-- Real-Time "Heading to..." Bottleneck Reroute Assistant -->
+    <div class="reroute-assistant-card" id="rerouteAssistantCard" style="background:#FFFFFF; border:1px solid var(--border-light); border-radius:var(--radius-card); padding:22px 28px; box-shadow:var(--shadow-warm); margin-bottom:28px; display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:1.6rem;">🧭</span>
+          <div>
+            <h3 style="font-size:1.2rem; font-family:var(--font-serif); margin-bottom:2px;">Live Congestion & Alternative Assistant</h3>
+            <span style="font-size:0.82rem; color:var(--text-secondary);">Heading somewhere right now? CrowdWise evaluates live queue risk and suggests instant walk-in alternatives.</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <label style="font-size:0.8rem; font-weight:700; color:var(--text-primary); letter-spacing:0.04em;">I AM HEADING TO:</label>
+          <select id="headingPlaceSelect" style="padding:8px 18px; border-radius:var(--radius-pill); border:1.5px solid var(--border-light); font-family:var(--font-sans); font-size:0.85rem; font-weight:600; background:#FBF9F2; color:var(--text-primary); cursor:pointer;">
+            <!-- Populated via app.js with City Palace default -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Dynamic Alert & Recommendation Banner for the selected place -->
+      <div id="rerouteAlertBanner" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; background:#FEF2F2; border:1px solid #FECACA; border-radius:var(--radius-card-sm); padding:16px 22px;">
+        <!-- Injected via JavaScript based on selected place and current crowd score -->
+      </div>
+    </div>
+
     <!-- Workspace: Map + Destination Cards -->
     <div class="engine-workspace">
       <!-- Left: Leaflet Interactive Map -->

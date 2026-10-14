@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderDestinations();
   initModals();
   initJudgePlaybook();
+  initRerouteAssistant();
 });
 
 // 1. Leaflet Map Initialization with TomTom Traffic Layer
@@ -382,6 +383,7 @@ function refreshAll() {
       }));
     }
   });
+  updateRerouteAssistant();
 }
 
 // 5. Dynamic Itinerary Re-Planning on Sudden Rain Alert
@@ -563,4 +565,84 @@ function initJudgePlaybook() {
     `;
     container.appendChild(box);
   });
+}
+
+// 9. Real-Time "Heading to..." Bottleneck Reroute Assistant
+function initRerouteAssistant() {
+  const select = document.getElementById("headingPlaceSelect");
+  if (!select) return;
+
+  select.innerHTML = UDAIPUR_DESTINATIONS.map(d => 
+    `<option value="${d.id}" ${d.id === "UDR_001" ? "selected" : ""}>${d.name}</option>`
+  ).join('');
+
+  select.addEventListener("change", () => {
+    updateRerouteAssistant();
+  });
+
+  updateRerouteAssistant();
+}
+
+function updateRerouteAssistant() {
+  const select = document.getElementById("headingPlaceSelect");
+  const banner = document.getElementById("rerouteAlertBanner");
+  if (!select || !banner) return;
+
+  const placeId = select.value || "UDR_001";
+  const dest = UDAIPUR_DESTINATIONS.find(d => d.id === placeId);
+  if (!dest) return;
+
+  const crowdData = computeCrowdScore(dest);
+  const isHigh = crowdData.score >= 65;
+
+  if (isHigh) {
+    // Find primary alternative (e.g. Jagdish Mandir for City Palace)
+    const altId = dest.alternatives && dest.alternatives.length > 0 ? dest.alternatives[0] : null;
+    const altDest = altId ? UDAIPUR_DESTINATIONS.find(d => d.id === altId) : null;
+    const altScore = altDest ? computeCrowdScore(altDest) : null;
+
+    banner.style.background = "#FEF2F2";
+    banner.style.borderColor = "#FECACA";
+    banner.style.color = "#991B1B";
+
+    const walkNote = (altDest && altDest.id === "UDR_008")
+      ? "only <strong>150m (2 min walk)</strong> from City Palace gate" 
+      : "an intent-matched alternative nearby";
+
+    banner.innerHTML = `
+      <div style="display:flex; align-items:flex-start; gap:12px; max-width:740px;">
+        <span style="font-size:1.6rem; line-height:1;">⚠️</span>
+        <div>
+          <div style="font-weight:700; font-size:0.95rem; color:#991B1B; margin-bottom:3px;">
+            High Bottleneck Warning at ${dest.name} (${crowdData.score}% Capacity • Est. Wait: 60–90 mins)
+          </div>
+          <div style="font-size:0.83rem; color:#7F1D1D; line-height:1.45;">
+            Heading there now? Skip the line and visit <strong>${altDest ? altDest.name : "nearby alternatives"}</strong> (${walkNote}) — currently just <strong>${altScore ? altScore.score : 28}% crowd (&lt;10 min wait)</strong> with authentic ${dest.primaryIntent.replace('_', ' ')}!
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        ${altDest ? `<button class="btn-pill btn-pill-lime" style="padding:8px 16px; font-size:0.8rem;" onclick="selectDestination('${altDest.id}')">Switch to ${altDest.name.split(' ')[0]} (150m walk) &rarr;</button>` : ''}
+        <button class="btn-pill btn-pill-outline" style="padding:8px 14px; font-size:0.8rem; background:white;" onclick="openAlternativeModal('${dest.id}')">All Options</button>
+      </div>
+    `;
+  } else {
+    banner.style.background = "#F0FDF4";
+    banner.style.borderColor = "#DCFCE7";
+    banner.style.color = "#166534";
+    banner.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:1.5rem;">🟢</span>
+        <div>
+          <div style="font-weight:700; font-size:0.95rem; color:#166534;">
+            ${dest.name} is looking great right now! (${crowdData.score}% &bull; ${crowdData.level} Crowd)
+          </div>
+          <div style="font-size:0.82rem; color:#15803D;">
+            Estimated entry queue is under 15 minutes. Good window to visit!
+          </div>
+        </div>
+      </div>
+      <button class="btn-pill btn-pill-outline" style="padding:8px 14px; font-size:0.8rem; background:white;" onclick="openAlternativeModal('${dest.id}')">Explore Alternatives</button>
+    `;
+  }
 }
