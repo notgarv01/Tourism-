@@ -346,6 +346,15 @@ function initControls() {
       }
     });
   }
+
+  // Fit All 25 Sites Button
+  const fitBtn = document.getElementById("fitAllSitesBtn");
+  if (fitBtn) {
+    fitBtn.addEventListener("click", () => {
+      const allCoords = UDAIPUR_DESTINATIONS.map(d => d.coords);
+      map.fitBounds(allCoords, { padding: [40, 40] });
+    });
+  }
 }
 
 function refreshAll() {
@@ -605,9 +614,14 @@ function updateRerouteAssistant() {
     banner.style.borderColor = "#FECACA";
     banner.style.color = "#991B1B";
 
-    const walkNote = (altDest && altDest.id === "UDR_008")
+    const isJagdish = altDest && (altDest.id === "UDR_003" || altDest.name.toLowerCase().includes("jagdish"));
+    const walkNote = isJagdish
       ? "only <strong>150m (2 min walk)</strong> from City Palace gate" 
       : "an intent-matched alternative nearby";
+
+    const switchBtnText = isJagdish
+      ? "Switch to Jagdish (150m walk) &rarr;"
+      : `Switch to ${altDest ? altDest.name.split(' ')[0] : 'Alternative'} &rarr;`;
 
     banner.innerHTML = `
       <div style="display:flex; align-items:flex-start; gap:12px; max-width:740px;">
@@ -622,7 +636,7 @@ function updateRerouteAssistant() {
         </div>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
-        ${altDest ? `<button class="btn-pill btn-pill-lime" style="padding:8px 16px; font-size:0.8rem;" onclick="selectDestination('${altDest.id}')">Switch to ${altDest.name.split(' ')[0]} (150m walk) &rarr;</button>` : ''}
+        ${altDest ? `<button class="btn-pill btn-pill-lime" style="padding:8px 16px; font-size:0.8rem;" onclick="selectDestination('${altDest.id}')">${switchBtnText}</button>` : ''}
         <button class="btn-pill btn-pill-outline" style="padding:8px 14px; font-size:0.8rem; background:white;" onclick="openAlternativeModal('${dest.id}')">All Options</button>
       </div>
     `;
