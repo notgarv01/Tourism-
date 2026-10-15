@@ -376,9 +376,9 @@ function selectDestination(placeId) {
   // Refresh Explorer cards so selected item is highlighted
   renderExplorer();
 
-  const featEl = document.getElementById("featuredPlaceContainer");
-  if (featEl) {
-    featEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const cardsPane = document.querySelector(".explorer-cards-pane");
+  if (cardsPane) {
+    cardsPane.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 

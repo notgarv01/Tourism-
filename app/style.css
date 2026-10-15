@@ -957,11 +957,42 @@ h1, h2, h3, .serif-font {
   align-items: center;
 }
 
-/* RIGHT SIDE: Cards Pane */
+/* RIGHT SIDE: Cards Pane (Scrollable matching Map height) */
 .explorer-cards-pane {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  height: 740px;
+  max-height: 740px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 12px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lime-accent) rgba(10, 27, 19, 0.7);
+}
+
+/* Custom Sleek Scrollbar for Cards Pane */
+.explorer-cards-pane::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explorer-cards-pane::-webkit-scrollbar-track {
+  background: rgba(10, 27, 19, 0.75);
+  border-radius: 10px;
+  margin: 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.explorer-cards-pane::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9FE859 0%, #10B981 100%);
+  border-radius: 10px;
+  border: 2px solid #0A1B13;
+}
+
+.explorer-cards-pane::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #B5F279 0%, #34D399 100%);
+  box-shadow: 0 0 10px rgba(159, 232, 89, 0.6);
 }
 
 .cards-pane-header {
@@ -1421,6 +1452,10 @@ h1, h2, h3, .serif-font {
   }
   .explorer-control-panel {
     grid-template-columns: 1fr;
+  }
+  .explorer-cards-pane {
+    height: 620px;
+    max-height: 620px;
   }
 }
 
