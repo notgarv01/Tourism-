@@ -1,5 +1,5 @@
 // ==========================================================================
-// CROWDWISE UDAIPUR ENGINE - LOGIC & INTERACTION CONTROLLER
+// NORUSH UDAIPUR ENGINE - LOGIC & INTERACTION CONTROLLER
 // Grounded in Unified_Smart_Tourism_Crowd_Prediction_Master_Blueprint.pdf
 // ==========================================================================
 
@@ -22,16 +22,19 @@ let tomtomTrafficLayer = null;
 let tomtomTrafficVisible = true;
 
 document.addEventListener("DOMContentLoaded", () => {
-  initMap();
-  initControls();
-  renderExplorer();
-  initModals();
-  initJudgePlaybook();
-  initRerouteAssistant();
+  try { initMap(); } catch (e) { console.error("Error in initMap:", e); }
+  try { initControls(); } catch (e) { console.error("Error in initControls:", e); }
+  try { renderExplorer(); } catch (e) { console.error("Error in renderExplorer:", e); }
+  try { initModals(); } catch (e) { console.error("Error in initModals:", e); }
+  try { initJudgePlaybook(); } catch (e) { console.error("Error in initJudgePlaybook:", e); }
+  try { initRerouteAssistant(); } catch (e) { console.error("Error in initRerouteAssistant:", e); }
 });
 
 // 1. Leaflet Map Initialization with TomTom Traffic Layer
 function initMap() {
+  const mapEl = document.getElementById('leafletMap');
+  if (!mapEl) return;
+
   // Centered on Udaipur Old City & Lakes
   map = L.map('leafletMap', {
     center: [24.5880, 73.6850],
@@ -62,12 +65,16 @@ function initMap() {
   fetchTomTomLiveTraffic();
 
   // Add markers for all destinations
-  UDAIPUR_DESTINATIONS.forEach(dest => {
-    const crowdData = computeCrowdScore(dest);
-    const marker = createCustomMarker(dest, crowdData);
-    marker.addTo(map);
-    mapMarkers[dest.id] = marker;
-  });
+  if (typeof UDAIPUR_DESTINATIONS !== "undefined" && Array.isArray(UDAIPUR_DESTINATIONS)) {
+    UDAIPUR_DESTINATIONS.forEach(dest => {
+      const crowdData = computeCrowdScore(dest);
+      const marker = createCustomMarker(dest, crowdData);
+      marker.addTo(map);
+      mapMarkers[dest.id] = marker;
+    });
+  } else {
+    console.error("UDAIPUR_DESTINATIONS is not defined! Verify data.js script load.");
+  }
 }
 
 // Fetch live telemetry from TomTom Traffic Segment API for City Palace access road

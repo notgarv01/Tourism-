@@ -1,4 +1,4 @@
-# CrowdWise • Smart Tourism Intelligence Engine (Udaipur Pilot)
+# NoRush • Smart Tourism Intelligence Engine (Udaipur Pilot)
 
 > **"Good travels spread. Crowds don't."**  
 > A predictive tourism decision engine that foresees crowd bottlenecks, preserves traveler intent with experience-matched alternatives, and dynamically replans itineraries on live disruptions.

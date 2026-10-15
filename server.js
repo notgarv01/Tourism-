@@ -80,7 +80,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`CrowdWise Tourism Server is running!`);
+  console.log(`NoRush Tourism Server is running!`);
   console.log(`- Local:   http://localhost:${PORT}/`);
   console.log(`- Network: http://127.0.0.1:${PORT}/`);
   console.log(`Serving files from: ${APP_DIR}`);
