@@ -879,4 +879,4 @@ const JUDGE_PLAYBOOK = [
     q: "Why can't you just scrape public CCTV feeds (OSIRIS)?",
     a: "Camera field-of-view does not equal ground truth. A single camera has occlusions and blind spots. Computer vision is valid only for calibrated gate ingress counts."
   }
-];\n
+];
