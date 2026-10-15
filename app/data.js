@@ -24,7 +24,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.35,
     accessibility: { wheelchair: "Partial", stairs: "Significant stairs" },
-    image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=900&q=80",
+    image: "images/City Palace.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "The crown jewel of Mewar royalty on the banks of Lake Pichola. High bottlenecks occur at the Badi Pol gate and museum galleries between 11:30 AM and 3:30 PM.",
     hourlyBaseline: {
@@ -57,7 +57,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.40,
     accessibility: { wheelchair: "Yes (Ghats)", stairs: "Minor" },
-    image: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=900&q=80",
+    image: "images/Lake Pichola.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Iconic freshwater lake famous for sunset boat cruises around Jag Mandir and Lake Palace. Severe passenger queues form at Rameshwar Ghat between 4:00 PM and 6:30 PM.",
     hourlyBaseline: {
@@ -90,7 +90,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.30,
     accessibility: { wheelchair: "No (Steep staircase)", stairs: "32 stone steps" },
-    image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80",
+    image: "images/JagdishTemple.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Majestic 375-year-old carved stone temple built by Maharana Jagat Singh in 1651 AD, just 150 meters outside City Palace gate. Features intricate elephant friezes, serene atmosphere, and minimal queue (<10 mins). The ideal immediate walk-in heritage alternative when City Palace has a long queue!",
     hourlyBaseline: {
@@ -123,7 +123,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.45,
     accessibility: { wheelchair: "Limited", stairs: "Historic staircases" },
-    image: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=900&q=80",
+    image: "images/Bagore Ki Haveli.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Stately waterfront haveli at Gangaur Ghat with 138 rooms, mirrored glasswork, royal attire, and turban gallery. Evening hosts the Dharohar folk dance show.",
     hourlyBaseline: {
@@ -156,7 +156,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds in Morning)",
     fragilityIndex: 0.25,
     accessibility: { wheelchair: "Partial", stairs: "Ghat steps" },
-    image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=900&q=80",
+    image: "images/Gangaur Ghat.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Prime ghat situated in front of Bagore Ki Haveli on Lake Pichola. Iconic for traditional festivals like Gangaur and Teej, scenic waterfront sit-outs, and sunset views.",
     hourlyBaseline: {
@@ -189,7 +189,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Less Crowded)",
     fragilityIndex: 0.40,
     accessibility: { wheelchair: "Limited", stairs: "Ghat steps" },
-    image: "https://images.unsplash.com/photo-1567157577867-05ccb1388e66?auto=format&fit=crop&w=900&q=80",
+    image: "images/Ambrai Ghat.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Opposite City Palace and Lake Palace. Offers the most photogenic night view of illuminated royal palaces. Peaks sharply between 5:30 PM and 7:30 PM.",
     hourlyBaseline: {
@@ -222,7 +222,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.20,
     accessibility: { wheelchair: "Yes (Full Promenade)", stairs: "None" },
-    image: "https://images.unsplash.com/photo-1606298855672-3efb63017be8?auto=format&fit=crop&w=900&q=80",
+    image: "images/FatehSagarLake.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Vast northern lake with double the boating dock capacity of Pichola, pedestrian boulevard (Mumbai Chowpatty style), and peaceful mountain views.",
     hourlyBaseline: {
@@ -255,7 +255,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Fewer Tour Buses)",
     fragilityIndex: 0.30,
     accessibility: { wheelchair: "Yes (Wide pathways)", stairs: "None" },
-    image: "https://images.unsplash.com/photo-1585130401366-fe05a8d813c4?auto=format&fit=crop&w=900&q=80",
+    image: "images/SaheliyoKiBadi.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Built for a royal entourage of 48 maidens in the 18th century. Ornate marble elephant fountains, lotus pools, and lush manicured lawns.",
     hourlyBaseline: {
@@ -288,7 +288,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Less Traffic on Winding Road)",
     fragilityIndex: 0.50,
     accessibility: { wheelchair: "No", stairs: "Steep access roads & stairs" },
-    image: "https://images.unsplash.com/photo-1622306757650-2d68fec3b555?auto=format&fit=crop&w=900&q=80",
+    image: "images/SajjanGarh.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Perched 3,100 feet above sea level atop Bansdara Peak. Built by Maharana Sajjan Singh to track monsoon clouds. Extreme congestion at summit shuttle gates between 4:45 PM and 6:30 PM.",
     hourlyBaseline: {
@@ -321,7 +321,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Less Footfall)",
     fragilityIndex: 0.30,
     accessibility: { wheelchair: "Yes (Golf carts available)", stairs: "Paved trails" },
-    image: "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=900&q=80",
+    image: "images/SajjanGarh.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Expansive 5.19-sq-km wildlife park at the foot of Sajjangarh. Houses Asiatic lions, tigers, leopards, and birds in open moated enclosures. Clean, spacious, and uncrowded.",
     hourlyBaseline: {
@@ -354,7 +354,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Relaxed Pace)",
     fragilityIndex: 0.30,
     accessibility: { wheelchair: "Partial", stairs: "Terrace garden steps" },
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80",
+    image: "images/Doosh talai.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Charming freshwater pond at the southeastern corner of Lake Pichola with Pandit Deendayal Upadhyay Rock Garden and musical fountain. Gateway to the Karni Mata ropeway.",
     hourlyBaseline: {
@@ -387,7 +387,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Low Footfall Always)",
     fragilityIndex: 0.25,
     accessibility: { wheelchair: "No", stairs: "Hill steps" },
-    image: "https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=900&q=80",
+    image: "images/ManikLalVermaPark.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Elevated rock garden positioned above Doodh Talai offering sweeping vantage points of Lake Pichola, Jag Mandir, and City Palace. Peaceful alternative to crowded lake promenades.",
     hourlyBaseline: {
@@ -420,7 +420,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Ropeway Queue <10m)",
     fragilityIndex: 0.40,
     accessibility: { wheelchair: "Partial (Cable car assistance)", stairs: "Temple plinth stairs" },
-    image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80",
+    image: "images/Karni mata.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Situated atop Machla Magra hill, accessible by a thrilling 4-minute ropeway ride or walking staircase. Features unbroken panoramic sunset views over City Palace and Lake Pichola.",
     hourlyBaseline: {
@@ -453,7 +453,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.25,
     accessibility: { wheelchair: "Yes (Vehicle driven to top)", stairs: "Minor" },
-    image: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=900&q=80",
+    image: "images/MotiMagri_MaharanaPratapMemorial.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Pearl Hill dedicated to Mewar's legendary warrior Maharana Pratap and his loyal steed Chetak. Offers tranquil landscaped trails and panoramic vistas across Fateh Sagar Lake.",
     hourlyBaseline: {
@@ -486,7 +486,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Vast Grounds, Rarely Congested)",
     fragilityIndex: 0.20,
     accessibility: { wheelchair: "Yes (Flat paved tracks)", stairs: "None" },
-    image: "https://images.unsplash.com/photo-1585130401366-fe05a8d813c4?auto=format&fit=crop&w=900&q=80",
+    image: "images/GulabBaghAndZoo.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Built in 1881 by Maharana Sajjan Singh, spanning 100 acres with rare flora, a century-old Victoria Hall library (Saraswati Bhawan), and vintage toy train.",
     hourlyBaseline: {
@@ -519,7 +519,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Low Footfall)",
     fragilityIndex: 0.25,
     accessibility: { wheelchair: "Partial (Unpaved village paths)", stairs: "Hut plinths" },
-    image: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=900&q=80",
+    image: "images/Shilpgram.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "70-acre living ethnographic museum 3 km west of Udaipur, showcasing authentic rural dwellings of Rajasthan, Gujarat, and Goa. Features daily folk dance, pottery, and weaving.",
     hourlyBaseline: {
@@ -552,7 +552,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(No School Crowds)",
     fragilityIndex: 0.30,
     accessibility: { wheelchair: "Yes", stairs: "None" },
-    image: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=900&q=80",
+    image: "images/FatehSagarLake.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Located near Fateh Sagar Lake; features 125m long aquarium galleries showcasing over 150 species of marine and freshwater fishes, touch tanks, and VR experiences.",
     hourlyBaseline: {
@@ -585,7 +585,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Serene & Uncrowded)",
     fragilityIndex: 0.35,
     accessibility: { wheelchair: "Partial (Lake bank)", stairs: "Steep hill hike to Bahubali" },
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80",
+    image: "images/BadiLake.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Built by Maharana Raj Singh I in 1680. Surrounded by dramatic Aravalli hills, its famous Bahubali Hill peak offers breathtaking sunrise panoramas without the commercial chaos.",
     hourlyBaseline: {
@@ -618,7 +618,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Consistently Peaceful)",
     fragilityIndex: 0.25,
     accessibility: { wheelchair: "Partial", stairs: "Embankment steps" },
-    image: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=900&q=80",
+    image: "images/UdaiSagarLake.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Constructed by Maharana Udai Singh 13 km east of Udaipur to supply water to his kingdom. A peaceful, uncrowded expanse with an ancient dam wall and tranquil rural vistas.",
     hourlyBaseline: {
@@ -651,7 +651,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Consistently Low Footfall)",
     fragilityIndex: 0.60,
     accessibility: { wheelchair: "Partial", stairs: "Paved pathways" },
-    image: "https://images.unsplash.com/photo-1585130401366-fe05a8d813c4?auto=format&fit=crop&w=900&q=80",
+    image: "images/AharCenotaphs.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Over 250 domed marble cenotaphs commemorating the Maharanas of Mewar. Exquisite Rajput architecture dating back 400 years, rarely congested. Perfect heritage alternative to City Palace.",
     hourlyBaseline: {
@@ -684,7 +684,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.40,
     accessibility: { wheelchair: "Partial (Ferry boarding assistance)", stairs: "Courtyard levels" },
-    image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=900&q=80",
+    image: "images/JagmandirIslandPalace.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Built on an island in Lake Pichola, also known as 'Lake Garden Palace'. Renowned for its row of sculpted marble elephants, ornate dome pavilions, and royal fountain courtyards.",
     hourlyBaseline: {
@@ -717,7 +717,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Vast Expanse)",
     fragilityIndex: 0.20,
     accessibility: { wheelchair: "Partial", stairs: "Embankment stairs" },
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80",
+    image: "images/JaisamandLake.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Asia's second-largest artificial lake (~48 km from Udaipur) built in 1685. Features six intricately carved marble cenotaphs, island tribal settlements, and a wildlife sanctuary.",
     hourlyBaseline: {
@@ -750,7 +750,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Low Footfall)",
     fragilityIndex: 0.55,
     accessibility: { wheelchair: "No", stairs: "Stone plinths" },
-    image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80",
+    image: "images/SahastrabahuTemple.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Magnificent 1,000-year-old twin temple complex dedicated to Lord Vishnu in Nagda (~22 km north of Udaipur). Features astonishingly intricate Torana gateways and ceiling friezes.",
     hourlyBaseline: {
@@ -783,7 +783,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Lower Crowds)",
     fragilityIndex: 0.25,
     accessibility: { wheelchair: "Yes (Museum galleries)", stairs: "Minor" },
-    image: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=900&q=80",
+    image: "images/Haldighati.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Famous mountain pass in the Aravallis (~40 km from Udaipur) where the heroic Battle of Haldighati was fought in 1576. Features the yellow-turmeric soil pass, Chetak Samadhi, and museum.",
     hourlyBaseline: {
@@ -816,7 +816,7 @@ const UDAIPUR_DESTINATIONS = [
     recommendedDaysNote: "(Less Pilgrimage Rush)",
     fragilityIndex: 0.50,
     accessibility: { wheelchair: "Partial (Crowded bazaars)", stairs: "Temple thresholds" },
-    image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80",
+    image: "images/Nathdwara.jpg",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
     description: "Renowned 17th-century shrine of Shrinathji (~45 km from Udaipur) on the banks of Banas River. Draws devotees from around the world for festive darshan, famous prasad, and Pichwai paintings.",
     hourlyBaseline: {
