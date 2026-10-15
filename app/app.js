@@ -8,6 +8,9 @@ let state = {
   dayType: "weekend",       // weekday, weekend, holiday
   weather: "clear",         // clear, heat, rain
   selectedPlaceId: "UDR_001",
+  activeCategory: "all",    // all, Lakes, Historical, Temples, Gardens, Others
+  searchQuery: "",
+  favorites: new Set(["UDR_001", "UDR_008"]),
   userReports: {},          // placeId -> { rating, timestamp }
   itinerarySwapped: false
 };
@@ -21,7 +24,7 @@ let tomtomTrafficVisible = true;
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
   initControls();
-  renderDestinations();
+  renderExplorer();
   initModals();
   initJudgePlaybook();
   initRerouteAssistant();
@@ -198,84 +201,196 @@ function getCrowdColor(level) {
   return "#10B981";
 }
 
-// 3. Render Destination Cards
-function renderDestinations() {
-  const container = document.getElementById("destinationsList");
-  container.innerHTML = "";
+// 3. Render Smart Travel Explorer (Featured Card + Secondary Grid)
+function renderExplorer() {
+  const featuredContainer = document.getElementById("featuredPlaceContainer");
+  const visualGrid = document.getElementById("destinationsVisualGrid");
+  const countBadge = document.getElementById("placesCountBadge");
+  if (!featuredContainer || !visualGrid) return;
 
-  UDAIPUR_DESTINATIONS.forEach(dest => {
-    const crowdData = computeCrowdScore(dest);
-    const meterClass = crowdData.level === "High" ? "meter-high" : crowdData.level === "Moderate" ? "meter-mod" : "meter-low";
-    const provClass = crowdData.provenance === "RECENT" ? "prov-recent" : "prov-pred";
-    const isSelected = dest.id === state.selectedPlaceId;
+  // Filter destinations based on category and search query
+  const filtered = UDAIPUR_DESTINATIONS.filter(dest => {
+    let catMatch = true;
+    if (state.activeCategory && state.activeCategory !== "all") {
+      catMatch = (dest.category === state.activeCategory);
+    }
+    let searchMatch = true;
+    if (state.searchQuery) {
+      const q = state.searchQuery.toLowerCase();
+      const name = (dest.name || "").toLowerCase();
+      const subtitle = (dest.subtitle || "").toLowerCase();
+      const cat = (dest.category || "").toLowerCase();
+      const tags = (dest.tags || []).join(" ").toLowerCase();
+      searchMatch = name.includes(q) || subtitle.includes(q) || cat.includes(q) || tags.includes(q);
+    }
+    return catMatch && searchMatch;
+  });
 
-    const card = document.createElement("div");
-    card.className = `dest-card ${isSelected ? 'selected' : ''}`;
-    card.id = `card-${dest.id}`;
-    card.innerHTML = `
-      <div class="dest-top-row">
-        <div class="dest-title-group">
-          <h3>${dest.name}</h3>
-          <span class="dest-subtitle">${dest.subtitle} &bull; ${dest.category}</span>
+  if (countBadge) {
+    countBadge.innerHTML = `<span>Showing <strong>${filtered.length}</strong> destination${filtered.length === 1 ? '' : 's'}</span>`;
+  }
+
+  // 1. Featured Card Selection: prefer currently selected if matching, or first match
+  let feat = filtered.find(d => d.id === state.selectedPlaceId);
+  if (!feat) {
+    feat = filtered.length > 0 ? filtered[0] : UDAIPUR_DESTINATIONS.find(d => d.id === state.selectedPlaceId) || UDAIPUR_DESTINATIONS[0];
+  }
+
+  const featCrowd = computeCrowdScore(feat);
+  const featColor = getCrowdColor(featCrowd.level);
+  const isFeatFav = state.favorites.has(feat.id);
+
+  featuredContainer.innerHTML = `
+    <div class="featured-place-card" id="card-${feat.id}">
+      <div class="featured-image-box">
+        <img class="featured-img" src="${feat.image}" alt="${feat.name}" onerror="this.src='https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=900&q=80'">
+        <div class="featured-gradient-scrim"></div>
+        <div class="badge-popular-choice">
+          👑 ${feat.popularChoice ? 'Popular Choice' : 'Featured Highlight'}
         </div>
-        <span class="badge-provenance ${provClass}">
-          ${crowdData.provenance}: ${crowdData.level}
-        </span>
-      </div>
-
-      <div class="crowd-meter-wrapper">
-        <div class="crowd-meter-header">
-          <span>Predicted Density: <strong style="color:${getCrowdColor(crowdData.level)}">${crowdData.score}%</strong></span>
-          <span style="color:var(--text-muted); font-size:0.75rem;">Capacity: ${dest.capacityCeiling}</span>
-        </div>
-        <div class="meter-track">
-          <div class="meter-fill ${meterClass}" style="width: ${crowdData.score}%;"></div>
-        </div>
-      </div>
-
-      <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.45;">
-        ${dest.description.substring(0, 115)}...
-      </p>
-
-      <div class="dest-footer">
-        <div class="dest-tags">
-          ${dest.experienceTags.slice(0, 2).map(tag => `<span class="tag-item">#${tag.replace('_', ' ')}</span>`).join('')}
-        </div>
-        <button class="btn-pill btn-pill-outline" style="padding:6px 14px; font-size:0.76rem;" onclick="openAlternativeModal('${dest.id}')">
-          Find Alternative &rarr;
+        <button class="card-heart-btn ${isFeatFav ? 'favorited' : ''}" onclick="toggleFavorite('${feat.id}', event)" title="Toggle Favorite">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFeatFav ? '#EF4444' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
         </button>
+      </div>
+
+      <div class="featured-details-content">
+        <div class="featured-title-bar">
+          <div class="featured-place-names">
+            <h3>${feat.name}</h3>
+            <span class="featured-location">📍 ${feat.displayLocation || 'Udaipur, Rajasthan'}</span>
+          </div>
+          <button class="btn-view-details" onclick="openAlternativeModal('${feat.id}')">
+            View Details &rarr;
+          </button>
+        </div>
+
+        <div class="featured-stats-row">
+          <!-- 1. Predicted Density -->
+          <div class="stat-insight-card">
+            <div class="insight-header">
+              <span>👥</span>
+              <span>Predicted Crowd Density</span>
+            </div>
+            <div class="insight-value" style="color:${featColor};">${featCrowd.score}%</div>
+            <div class="mini-meter-track">
+              <div class="mini-meter-fill" style="width:${featCrowd.score}%; background:${featColor};"></div>
+            </div>
+          </div>
+
+          <!-- 2. Best Visit Time -->
+          <div class="stat-insight-card">
+            <div class="insight-header">
+              <span>🕒</span>
+              <span>Best Visit Time</span>
+            </div>
+            <div class="insight-value">${feat.bestVisitTime || '9 AM – 11 AM'}</div>
+            <span class="insight-sub">${feat.bestVisitTimeNote || '(Less Crowded)'}</span>
+          </div>
+
+          <!-- 3. Recommended Days -->
+          <div class="stat-insight-card">
+            <div class="insight-header">
+              <span>📅</span>
+              <span>Recommended Days</span>
+            </div>
+            <div class="insight-value">${feat.recommendedDays || 'Tue – Thu'}</div>
+            <span class="insight-sub">${feat.recommendedDaysNote || '(Lower Crowds)'}</span>
+          </div>
+        </div>
+
+        <div class="featured-meta-bar">
+          <span class="meta-item">🏛️ Capacity: <strong>${feat.capacityCeiling}</strong></span>
+          <span class="meta-item star-rating">⭐ Rating: <strong>${feat.rating || 4.6} ★</strong></span>
+          <span class="meta-item">🏷️ Tags: ${(feat.tags || []).join(', ')}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 2. Secondary Grid: Render remaining places
+  visualGrid.innerHTML = "";
+  const remaining = filtered.filter(d => d.id !== feat.id);
+
+  if (remaining.length === 0 && filtered.length === 0) {
+    visualGrid.innerHTML = `
+      <div class="empty-search-state">
+        <div style="font-size:2.2rem; margin-bottom:8px;">🔍</div>
+        <h4 style="color:#FFF; font-size:1.1rem; margin-bottom:4px;">No destinations found</h4>
+        <p>No places match your search query or filter. Try clearing filters.</p>
+      </div>
+    `;
+    return;
+  }
+
+  remaining.forEach(dest => {
+    const crowd = computeCrowdScore(dest);
+    const isFav = state.favorites.has(dest.id);
+    const card = document.createElement("div");
+    card.className = "visual-place-card";
+    card.id = `card-${dest.id}`;
+    card.title = `Click to inspect ${dest.name} on map`;
+    card.innerHTML = `
+      <img class="card-bg-img" src="${dest.image}" alt="${dest.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80'">
+      <div class="card-vignette-overlay"></div>
+      
+      <button class="card-heart-btn ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${dest.id}', event)" title="Toggle Favorite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? '#EF4444' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </button>
+
+      <div class="card-bottom-content">
+        <div class="card-title-box">
+          <h4>${dest.name}</h4>
+          <span class="card-category-txt">${dest.subtitle}</span>
+        </div>
+        <span class="crowd-status-pill crowd-status-${crowd.level.toLowerCase()}">
+          👥 ${crowd.level}
+        </span>
       </div>
     `;
 
     card.addEventListener("click", (e) => {
-      if (!e.target.closest("button")) {
+      if (!e.target.closest(".card-heart-btn")) {
         selectDestination(dest.id);
       }
     });
 
-    container.appendChild(card);
+    visualGrid.appendChild(card);
   });
 }
 
 function selectDestination(placeId) {
   state.selectedPlaceId = placeId;
   const dest = UDAIPUR_DESTINATIONS.find(d => d.id === placeId);
-  if (!dest) return;
-
-  // Center map with smooth pan
-  map.flyTo(dest.coords, 14, { duration: 1 });
-  if (mapMarkers[placeId]) {
-    mapMarkers[placeId].openPopup();
+  if (dest) {
+    // Center map with smooth pan
+    map.flyTo(dest.coords, 14, { duration: 1 });
+    if (mapMarkers[placeId]) {
+      mapMarkers[placeId].openPopup();
+    }
   }
 
-  // Highlight card
-  document.querySelectorAll(".dest-card").forEach(c => c.classList.remove("selected"));
-  const activeCard = document.getElementById(`card-${placeId}`);
-  if (activeCard) {
-    activeCard.classList.add("selected");
-    activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Refresh Explorer cards so selected item is highlighted
+  renderExplorer();
+
+  const featEl = document.getElementById("featuredPlaceContainer");
+  if (featEl) {
+    featEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
+
+window.toggleFavorite = function(placeId, event) {
+  if (event) event.stopPropagation();
+  if (state.favorites.has(placeId)) {
+    state.favorites.delete(placeId);
+  } else {
+    state.favorites.add(placeId);
+  }
+  renderExplorer();
+};
 
 // 4. Controls Interaction
 function initControls() {
@@ -313,6 +428,46 @@ function initControls() {
     });
   });
 
+  // Search Input & Clear
+  const searchInput = document.getElementById("placeSearchInput");
+  const clearBtn = document.getElementById("clearSearchBtn");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      state.searchQuery = e.target.value.trim().toLowerCase();
+      if (clearBtn) clearBtn.style.display = state.searchQuery ? "block" : "none";
+      renderExplorer();
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      state.searchQuery = "";
+      clearBtn.style.display = "none";
+      renderExplorer();
+    });
+  }
+
+  // Category Filter Pills
+  const catPills = document.querySelectorAll("#categoryFilterRow .cat-pill");
+  catPills.forEach(pill => {
+    pill.addEventListener("click", () => {
+      catPills.forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      state.activeCategory = pill.dataset.category;
+      renderExplorer();
+    });
+  });
+
+  // Simulation Controls Panel Toggle
+  const toggleBtn = document.getElementById("btnToggleControls");
+  const panel = document.getElementById("controlPanelWrapper");
+  if (toggleBtn && panel) {
+    toggleBtn.addEventListener("click", () => {
+      panel.classList.toggle("collapsed");
+      toggleBtn.classList.toggle("active");
+    });
+  }
+
   // Itinerary Disruption Buttons
   document.getElementById("btnSimulateRain").addEventListener("click", triggerRainDisruption);
   document.getElementById("btnQuickDemo").addEventListener("click", () => {
@@ -327,22 +482,22 @@ function initControls() {
   });
 
   // TomTom Traffic Layer Toggle
-  const toggleBtn = document.getElementById("toggleTomTomBtn");
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
+  const toggleTomTomBtn = document.getElementById("toggleTomTomBtn");
+  if (toggleTomTomBtn) {
+    toggleTomTomBtn.addEventListener("click", () => {
       tomtomTrafficVisible = !tomtomTrafficVisible;
       if (tomtomTrafficVisible) {
         if (tomtomTrafficLayer && !map.hasLayer(tomtomTrafficLayer)) {
           tomtomTrafficLayer.addTo(map);
         }
-        toggleBtn.textContent = "🚦 TomTom Traffic: ON";
-        toggleBtn.style.background = "#10B981";
+        toggleTomTomBtn.textContent = "🚦 TomTom Traffic: ON";
+        toggleTomTomBtn.style.background = "#10B981";
       } else {
         if (tomtomTrafficLayer && map.hasLayer(tomtomTrafficLayer)) {
           map.removeLayer(tomtomTrafficLayer);
         }
-        toggleBtn.textContent = "🚦 TomTom Traffic: OFF";
-        toggleBtn.style.background = "#64748B";
+        toggleTomTomBtn.textContent = "🚦 TomTom Traffic: OFF";
+        toggleTomTomBtn.style.background = "#64748B";
       }
     });
   }
@@ -359,7 +514,7 @@ function initControls() {
 
 function refreshAll() {
   // Update Cards
-  renderDestinations();
+  renderExplorer();
 
   // Update Map Markers
   UDAIPUR_DESTINATIONS.forEach(dest => {
