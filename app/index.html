@@ -155,87 +155,184 @@
   </section>
 
   <!-- ==========================================================================
-       INTERACTIVE ENGINE: LIVE CONTROLS & MAP WORKSPACE
+       SMART TRAVEL EXPLORER: UDAIPUR LIVE CROWD ENGINE (SPLIT MAP & CARDS)
        ========================================================================== -->
-  <section class="engine-container" id="predictions">
-    <div class="section-intro-box">
-      <div>
-        <span class="category-pill">INTERACTIVE SIMULATION CORE</span>
-        <h2>Udaipur Live Crowd Engine</h2>
-      </div>
-      <div style="font-size:0.85rem; color:var(--text-secondary);">
-        Model: <strong>CrowdScore = 0.40(Hist) + 0.30(Cal) + 0.20(Event) + 0.10(Weather)</strong>
-      </div>
-    </div>
-
-    <!-- Control Toolbar Card -->
-    <div class="control-panel">
-      <!-- 1. Time Slider -->
-      <div class="control-group">
-        <div class="control-label">
-          <span>Time of Day</span>
-          <span class="active-val" id="timeDisplay">13:00 PM</span>
+  <section class="explorer-outer-section" id="predictions">
+    <div class="explorer-container">
+      
+      <!-- Top Explorer Header matching the provided design -->
+      <div class="explorer-header-block">
+        <!-- Skyline / Title / Subtitle -->
+        <div class="explorer-title-area">
+          <div class="skyline-art" aria-hidden="true">
+            <svg viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="skyline-svg">
+              <path d="M4 56h232M16 56V32h8v24M34 56V24c0-2 2-4 4-4s4 2 4 4v32M52 56V36h12v20M78 56V18c0-3 3-6 6-6s6 3 6 6v38M102 56V28h16v28M130 56V14l8-8 8 8v42M158 56V30h14v26M184 56V22c0-3 3-5 6-5s6 2 6 5v34M208 56V34h16v22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+              <circle cx="84" cy="10" r="3" fill="currentColor" opacity="0.6"/>
+              <circle cx="138" cy="4" r="2.5" fill="currentColor" opacity="0.6"/>
+            </svg>
+          </div>
+          <div class="explorer-headings">
+            <h2 class="explorer-title">Smart <span class="highlight-lime">Travel</span> Explorer</h2>
+            <p class="explorer-subtitle">Explore. Plan. Travel Smarter. <span class="tag-live-dot"></span> <span class="sub-model-txt">Udaipur Live Crowd Engine</span></p>
+          </div>
         </div>
-        <div class="slider-container">
-          <input type="range" min="8" max="18" value="13" class="custom-range" id="timeSlider">
-          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
-            <span>08:00 AM</span>
-            <span>13:00 PM (Peak)</span>
-            <span>18:00 PM (Sunset)</span>
+
+        <!-- Search Bar and Filter Config Button -->
+        <div class="explorer-top-actions">
+          <div class="explorer-search-bar">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="placeSearchInput" placeholder="Search places, e.g. City Palace..." autocomplete="off">
+            <button type="button" id="clearSearchBtn" class="search-clear-btn" style="display:none;" title="Clear search">&times;</button>
+          </div>
+          <button class="filter-toggle-btn" id="btnToggleControls" title="Toggle Crowd Prediction Simulation Parameters">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills Bar matching the design -->
+      <div class="explorer-filter-nav">
+        <div class="category-pills-row" id="categoryFilterRow">
+          <button class="cat-pill active" data-category="all">
+            <span>All</span>
+          </button>
+          <button class="cat-pill" data-category="Lakes">
+            <span class="cat-icon">🌊</span>
+            <span>Lakes</span>
+          </button>
+          <button class="cat-pill" data-category="Historical">
+            <span class="cat-icon">🏛️</span>
+            <span>Historical</span>
+          </button>
+          <button class="cat-pill" data-category="Temples">
+            <span class="cat-icon">🛕</span>
+            <span>Temples</span>
+          </button>
+          <button class="cat-pill" data-category="Gardens">
+            <span class="cat-icon">🌿</span>
+            <span>Gardens</span>
+          </button>
+          <button class="cat-pill" data-category="Others">
+            <span class="cat-icon">⭐</span>
+            <span>Others</span>
+          </button>
+        </div>
+        <div class="places-count-pill" id="placesCountBadge">
+          <span>Showing <strong>10</strong> destinations</span>
+        </div>
+      </div>
+
+      <!-- Collapsible Live Prediction Simulation Controls -->
+      <div class="control-panel explorer-control-panel" id="controlPanelWrapper">
+        <!-- 1. Time Slider -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Time of Day</span>
+            <span class="active-val" id="timeDisplay">13:00 PM</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" min="8" max="18" value="13" class="custom-range" id="timeSlider">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
+              <span>08:00 AM</span>
+              <span>13:00 PM (Peak)</span>
+              <span>18:00 PM (Sunset)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Day Type -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Calendar Signal</span>
+          </div>
+          <div class="segmented-control" id="dayTypeControl">
+            <button class="seg-btn" data-day="weekday">Weekday</button>
+            <button class="seg-btn active" data-day="weekend">Weekend (+30%)</button>
+            <button class="seg-btn" data-day="holiday">Festival (+45%)</button>
+          </div>
+        </div>
+
+        <!-- 3. Weather Condition -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Live Weather Proxy</span>
+          </div>
+          <div class="weather-pills-bar" id="weatherControl">
+            <button class="weather-btn active" data-weather="clear">☀️ Clear 24°C</button>
+            <button class="weather-btn" data-weather="heat">🔥 Heat 39°C</button>
+            <button class="weather-btn" data-weather="rain">🌧️ Rain (15mm)</button>
           </div>
         </div>
       </div>
 
-      <!-- 2. Day Type -->
-      <div class="control-group">
-        <div class="control-label">
-          <span>Calendar Signal</span>
-        </div>
-        <div class="segmented-control" id="dayTypeControl">
-          <button class="seg-btn" data-day="weekday">Weekday</button>
-          <button class="seg-btn active" data-day="weekend">Weekend (+30%)</button>
-          <button class="seg-btn" data-day="holiday">Festival (+45%)</button>
-        </div>
-      </div>
-
-      <!-- 3. Weather Condition -->
-      <div class="control-group">
-        <div class="control-label">
-          <span>Live Weather Proxy</span>
-        </div>
-        <div class="weather-pills-bar" id="weatherControl">
-          <button class="weather-btn active" data-weather="clear">☀️ Clear 24°C</button>
-          <button class="weather-btn" data-weather="heat">🔥 Heat 39°C</button>
-          <button class="weather-btn" data-weather="rain">🌧️ Rain (15mm)</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workspace: Map + Destination Cards -->
-    <div class="engine-workspace">
-      <!-- Left: Leaflet Interactive Map -->
-      <div class="map-card-wrapper">
-        <div class="map-header-bar">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div style="font-size:0.85rem; font-weight:700;">Udaipur Geographic Heat Overlay</div>
-            <button id="toggleTomTomBtn" class="btn-pill" style="padding:4px 10px; font-size:0.7rem; background:#10B981; color:white; border:none; cursor:pointer;" title="Toggle TomTom Live Traffic Flow Layer">
-              🚦 TomTom Traffic: ON
-            </button>
+      <!-- Main Layout: Map on LEFT, Cards on RIGHT -->
+      <div class="explorer-grid-split">
+        
+        <!-- LEFT SIDE: Leaflet Map -->
+        <div class="explorer-map-pane">
+          <div class="map-card-wrapper">
+            <div class="map-header-bar">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="font-size:0.88rem; font-weight:700;">Udaipur Geographic Heat Overlay</div>
+                <button id="toggleTomTomBtn" class="btn-pill" style="padding:4px 10px; font-size:0.7rem; background:#10B981; color:white; border:none; cursor:pointer;" title="Toggle TomTom Live Traffic Flow Layer">
+                  🚦 TomTom Traffic: ON
+                </button>
+              </div>
+              <span class="category-pill" style="font-size:0.65rem;" id="mapStatusBadge">TOMTOM LIVE API ENGAGED</span>
+            </div>
+            <!-- Live Traffic Telemetry Ticker -->
+            <div id="trafficFeedBar" class="traffic-ticker-bar">
+              <span>🚦 <strong>City Palace Access Corridor:</strong> Live delay <span id="trafficDelayVal">+1 min (Normal Flow • 16 km/h)</span></span>
+              <span style="font-weight:700; color:#10B981;">● TomTom Live Telemetry</span>
+            </div>
+            <div id="leafletMap"></div>
+            <div class="map-footer-hint">
+              <span>💡 Click any marker or place card to center the view and inspect live crowd telemetry</span>
+            </div>
           </div>
-          <span class="category-pill" style="font-size:0.65rem;" id="mapStatusBadge">TOMTOM LIVE API ENGAGED</span>
         </div>
-        <!-- Live Traffic Telemetry Ticker -->
-        <div id="trafficFeedBar" style="background:#F0FDF4; border-bottom:1px solid #DCFCE7; padding:6px 16px; font-size:0.75rem; color:#166534; display:flex; justify-content:space-between; align-items:center;">
-          <span>🚦 <strong>City Palace Access Corridor:</strong> Live delay <span id="trafficDelayVal">+1 min (Normal Flow • 16 km/h)</span></span>
-          <span style="font-weight:700; color:#15803D;">● TomTom Live Telemetry</span>
+
+        <!-- RIGHT SIDE: Cards Design from Image -->
+        <div class="explorer-cards-pane">
+          <div class="cards-pane-header">
+            <div class="pane-title-group">
+              <span class="curated-badge">LIVE INSIGHT CARDS</span>
+              <span class="hover-callout-hint">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7 17L17 7"></path>
+                  <path d="M7 7h10v10"></path>
+                </svg>
+                Hover on any place to see real-time insights!
+              </span>
+            </div>
+          </div>
+
+          <!-- Active/Featured Selected Place Card (Expanded Design from Image) -->
+          <div id="featuredPlaceContainer">
+            <!-- Rendered dynamically via app.js -->
+          </div>
+
+          <!-- Secondary Grid of Destination Cards -->
+          <div class="destinations-visual-grid" id="destinationsVisualGrid">
+            <!-- Rendered dynamically via app.js -->
+          </div>
         </div>
-        <div id="leafletMap"></div>
+
       </div>
 
-      <!-- Right: Scrollable Destination Cards -->
-      <div class="destinations-scroll" id="destinationsList">
-        <!-- Rendered dynamically via app.js -->
-      </div>
     </div>
   </section>
 
