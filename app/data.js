@@ -33,7 +33,7 @@ const UDAIPUR_DESTINATIONS = [
       "16:00": 58, "17:00": 35, "18:00": 10
     },
     suggestedQuietSlot: "09:00 AM - 10:30 AM",
-    alternatives: ["UDR_006", "UDR_007", "UDR_009"] // Ahar Cenotaphs, Bagore Ki Haveli, Vintage Car Museum
+    alternatives: ["UDR_010", "UDR_007", "UDR_006", "UDR_009"] // Jagdish Mandir (150m away), Bagore Haveli, Ahar Cenotaphs, Vintage Car Museum
   },
   {
     id: "UDR_002",
@@ -301,9 +301,9 @@ const UDAIPUR_DESTINATIONS = [
   },
   {
     id: "UDR_010",
-    name: "Jagdish Temple",
+    name: "Jagdish Mandir (Temple)",
     subtitle: "Temples • Udaipur",
-    displayLocation: "Old City, Udaipur",
+    displayLocation: "150m from City Palace Gate, Udaipur",
     category: "Temples",
     experienceTags: ["carved_pillars", "hindu_temple", "spiritual", "mewar_architecture"],
     tags: ["Temple", "Heritage"],
@@ -312,25 +312,25 @@ const UDAIPUR_DESTINATIONS = [
     openingHours: { open: "05:00", close: "22:00", lastEntry: "21:30" },
     avgVisitDurationMin: 45,
     ticketPriceInr: 0,
-    capacityCeiling: 700,
-    rating: 4.6,
+    capacityCeiling: 1500,
+    rating: 4.7,
     popularChoice: false,
     bestVisitTime: "7 AM – 9 AM",
     bestVisitTimeNote: "(Morning Aarti)",
     recommendedDays: "Mon – Wed",
     recommendedDaysNote: "(Lower Crowds)",
-    fragilityIndex: 0.40,
-    accessibility: { wheelchair: "No", stairs: "32 steep steps" },
+    fragilityIndex: 0.30,
+    accessibility: { wheelchair: "No (Steep staircase)", stairs: "32 stone steps" },
     image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80",
     officialSource: "https://www.tourism.rajasthan.gov.in/udaipur.html",
-    description: "Majestic 1651 Indo-Aryan temple dedicated to Lord Vishnu. Renowned for its 79-foot spire, intricate pillar carvings, and vibrant morning devotional ceremonies.",
+    description: "Majestic 375-year-old carved stone temple built by Maharana Jagat Singh in 1651 AD, just 150 meters outside City Palace gate. Features intricate elephant friezes, serene atmosphere, and minimal queue (<10 mins). The ideal immediate walk-in heritage alternative when City Palace has a long queue!",
     hourlyBaseline: {
-      "08:00": 25, "09:00": 45, "10:00": 60, "11:00": 68,
-      "12:00": 50, "13:00": 30, "14:00": 25, "15:00": 35,
-      "16:00": 50, "17:00": 70, "18:00": 82
+      "08:00": 20, "09:00": 30, "10:00": 42, "11:00": 48,
+      "12:00": 38, "13:00": 28, "14:00": 18, "15:00": 22,
+      "16:00": 36, "17:00": 52, "18:00": 62
     },
-    suggestedQuietSlot: "07:00 AM - 09:00 AM",
-    alternatives: ["UDR_006", "UDR_007"]
+    suggestedQuietSlot: "12:30 PM - 03:30 PM",
+    alternatives: ["UDR_001", "UDR_007"]
   }
 ];
 
