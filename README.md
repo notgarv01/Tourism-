@@ -1,33 +1,44 @@
-# NoRush • Smart Tourism Intelligence Engine (Udaipur Pilot)
+# NoRush • Smart Tourism Intelligence Engine
 
 > **"Good travels spread. Crowds don't."**  
-> A predictive tourism decision engine that foresees crowd bottlenecks, preserves traveler intent with experience-matched alternatives, and dynamically replans itineraries on live disruptions.
+> A predictive tourism decision engine that foresees crowd bottlenecks, preserves traveler intent with experience-matched alternatives, and dynamically replans itineraries on live disruptions across India.
 
 ---
 
 ## 🌟 Highlights & Key Differentiators
 
+- **Pan-India Coverage (40+ Sites across 10 Regional Hubs):** Covers Rajasthan (Udaipur & Jaipur), Golden Triangle (Agra & Delhi), Varanasi, Goa, Mumbai, Kerala, South Heritage (Mysore, Madurai, Hampi), and the Himalayas (Amritsar, Ladakh, Manali).
 - **Zero-Fake AI Doctrine:** We do NOT manufacture fake real-time CCTV headcounts or satellite tracking. Instead, we use a defensible **80% Deterministic Baseline + 20% Live Empirical Proxies** approach.
-- **Intent-Preserving Alternative Recommender:** Sunset boating matches sunset boating (Lake Pichola ➔ Fateh Sagar), and royal palaces match royal heritage (City Palace ➔ Ahar Cenotaphs / Bagore Ki Haveli) — never an irrelevant indoor spot.
-- **Dynamic In-Trip Itinerary Re-Router (`/api/itineraries/replan`):** Recalculates multi-stop routes in `< 15 seconds` when sudden rainfall, closure, or crowd surges occur.
+- **Intent-Preserving Alternative Recommender:** Sunset boating matches sunset boating (Lake Pichola ➔ Fateh Sagar; Baga Beach ➔ Fort Aguada / Mandovi; Fort Kochi ➔ Alleppey), and royal palaces match royal heritage (City Palace ➔ Ahar Cenotaphs; Taj Mahal ➔ Fatehpur Sikri / Agra Fort) — never an irrelevant indoor spot.
+- **Dynamic In-Trip Itinerary Re-Router (`/api/itineraries/replan`):** Recalculates multi-stop routes in `< 15 seconds` when sudden rainfall, closure, or crowd surges occur across 6 distinct Indian travel circuits.
 - **5-Badge Data Provenance Standard:** Every metric is transparently tagged as `LIVE`, `RECENT`, `HISTORICAL`, `PREDICTED`, or `SIMULATED`.
 - **Waze-Style Citizen Reporting:** 1-tap queue reporting with rate-limiting and a 30-minute exponential decay half-life.
-- **Judge Q&A Playbook:** 12 battle-tested technical and commercial answers built right into the app and deck.
+- **Judge Q&A Playbook:** 12 battle-tested technical and commercial answers addressing national scalability, state tourism board integrations, and algorithmic transparency.
 
 ---
 
-## 🏛️ Udaipur Pilot Destinations Catalog
+## 🇮🇳 Pan-India Destination Catalog & Circuits
 
-1. **City Palace** (`UDR_001`): Royal heritage complex & museum. Peak: 11:30 AM – 3:30 PM (88%+ capacity).  
-   *Alternative:* Ahar Cenotaphs & Museum or Bagore Ki Haveli.
-2. **Lake Pichola** (`UDR_002`): Sunset waterfront & boat cruises. Peak: 4:00 PM – 6:30 PM (96% capacity).  
-   *Alternative:* Fateh Sagar Lake (2x boarding dock capacity).
-3. **Fateh Sagar Lake** (`UDR_003`): Spacious waterfront promenade & sunset boating.
-4. **Saheliyon-ki-Bari** (`UDR_004`): Royal courtyards & marble fountains.
-5. **Sajjangarh (Monsoon Palace)** (`UDR_005`): Mountain viewpoint & sunset panorama.  
-   *Alternative:* Bahubali Hills / Badi Lake.
-6. **Ahar Museum & Cenotaphs** (`UDR_006`): 250 Rajput marble memorials, ancient history, low queue.
-7. **Bagore Ki Haveli** (`UDR_007`): Waterfront 18th-century haveli museum & Dharohar folk dance.
+### 1. Rajasthan Heritage
+- **Udaipur (10 destinations):** City Palace, Lake Pichola, Fateh Sagar Lake, Jag Mandir, Sajjangarh Monsoon Palace, Saheliyon-ki-Bari, Ahar Cenotaphs, Bagore Ki Haveli, Vintage Car Museum, Jagdish Mandir.
+- **Jaipur (5 destinations):** Amber Fort (Amer), Hawa Mahal, City Palace Jaipur, Nahargarh Fort, Jal Mahal.
+
+### 2. Golden Triangle (North India)
+- **Agra & Delhi (6 destinations):** Taj Mahal, Agra Fort, Fatehpur Sikri, Qutub Minar, Humayun's Tomb, Red Fort (Lal Qila).
+
+### 3. Spiritual Uttar Pradesh
+- **Varanasi (4 destinations):** Kashi Vishwanath Temple Corridor, Dashashwamedh Ghat Aarti, Assi Ghat, Sarnath Dhamek Stupa.
+
+### 4. Coastal & Western India
+- **Goa (4 destinations):** Fort Aguada, Baga Beach, Basilica of Bom Jesus, Dudhsagar Waterfalls.
+- **Mumbai (3 destinations):** Gateway of India, Marine Drive (Queen's Necklace), Elephanta Caves.
+
+### 5. Southern Heritage & Backwaters
+- **Kerala (4 destinations):** Alleppey Backwaters & Houseboats, Mattancherry Dutch Palace, Fort Kochi Chinese Fishing Nets, Munnar Tea Plantations.
+- **South Heritage (4 destinations):** Mysore Palace, Meenakshi Amman Temple (Madurai), Virupaksha Temple & Hampi Ruins, Brihadisvara Temple (Thanjavur).
+
+### 6. Himalayas & North
+- **Himalayas (3 destinations):** Golden Temple (Amritsar), Pangong Tso Lake (Ladakh), Solang Valley & Rohtang Pass (Manali).
 
 ---
 
@@ -38,7 +49,7 @@ $$\text{CrowdScore}(d, t) = 0.40 \cdot C_{\text{hist}}(d, \text{dow}, \text{hr})
 
 - **$C_{\text{hist}}$ (40%):** Historical hourly density curve for day of week.
 - **$S_{\text{cal}}$ (30%):** Calendar surge factor (Weekday = 20, Weekend = 70, Festival = 95).
-- **$E_{\text{event}}$ (20%):** Local event proximity (Mewar festival, evening light & sound shows).
+- **$E_{\text{event}}$ (20%):** Local event proximity (Aarti times, light & sound shows, festival processions).
 - **$W_{\text{weather}}$ (10%):** Real-time Open-Meteo weather adjustment (heatwave $>38^\circ\text{C}$ or rain $>10\text{ mm/h}$).
 
 **Classification Boundaries:**
@@ -55,15 +66,13 @@ $$\text{UtilityScore}(c) = 0.30 \cdot S_{\text{low\_crowd}} + 0.25 \cdot S_{\tex
 
 ```
 ├── app/
-│   ├── index.html       # Advocado-aesthetic responsive UI with Leaflet map
+│   ├── index.html       # Advocado-aesthetic UI with Pan-India Leaflet map & city selector
 │   ├── style.css        # Vanilla CSS design system (Fraunces + Plus Jakarta Sans)
-│   ├── app.js           # Prediction engine, map controller, and replan logic
-│   └── data.js          # Udaipur destination metadata & Judge Playbook dataset
-├── Unified_Smart_Tourism_Crowd_Prediction_Master_Blueprint.pdf   # 8-page master blueprint
-├── CrowdWise_Udaipur_Hackathon_Pitch_Deck.pptx                   # 12-slide widescreen pitch deck
-├── generate_unified_pdf.py                                       # ReportLab PDF synthesis generator
-├── generate_pitch_deck.py                                        # python-pptx presentation generator
-└── README.md                                                     # Project documentation
+│   ├── app.js           # Pan-India prediction engine, map controller, and replan logic
+│   └── data.js          # 40+ destinations catalog, 6 multi-stop circuits & Judge Playbook
+├── server.js            # Zero-dependency Node.js HTTP server (port 8080)
+├── server.py            # Python SimpleHTTP fallback server
+└── README.md            # Project documentation
 ```
 
 ---
@@ -72,25 +81,13 @@ $$\text{UtilityScore}(c) = 0.30 \cdot S_{\text{low\_crowd}} + 0.25 \cdot S_{\tex
 
 1. Open terminal in the project directory:
    ```bash
-   cd app
+   node server.js
    ```
 
-2. Start a local HTTP server:
-   ```bash
-   python -m http.server 8080
-   ```
-
-3. Open your browser and navigate to:
+2. Open your browser and navigate to:
    ```
    http://localhost:8080/index.html
    ```
-
----
-
-## 📊 Presentations & Artifacts
-
-- **Master Technical Blueprint:** [`Unified_Smart_Tourism_Crowd_Prediction_Master_Blueprint.pdf`](./Unified_Smart_Tourism_Crowd_Prediction_Master_Blueprint.pdf)
-- **Hackathon Pitch Deck:** [`CrowdWise_Udaipur_Hackathon_Pitch_Deck.pptx`](./CrowdWise_Udaipur_Hackathon_Pitch_Deck.pptx)
 
 ---
 

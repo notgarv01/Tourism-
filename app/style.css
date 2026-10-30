@@ -93,6 +93,18 @@ h1, h2, h3, .serif-font {
   color: var(--text-primary);
 }
 
+.badge-india {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: #FF9933;
+  color: #143325;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .brand-dot {
   width: 14px;
   height: 14px;
@@ -643,6 +655,77 @@ h1, h2, h3, .serif-font {
 .filter-toggle-btn.active {
   background: #FFFFFF;
   color: var(--bg-dark-forest);
+}
+
+/* City & Region Selector Bar */
+.explorer-city-nav {
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.city-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+}
+
+.city-chips-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.city-chips-scroll::-webkit-scrollbar-thumb {
+  background: rgba(159, 232, 89, 0.35);
+  border-radius: 2px;
+}
+
+.city-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #E2ECE6;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.city-chip:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(159, 232, 89, 0.45);
+  transform: translateY(-1px);
+  color: #FFFFFF;
+}
+
+.city-chip.active {
+  background: #FFFFFF;
+  color: var(--bg-dark-forest);
+  border-color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+}
+
+.city-chip .city-count {
+  font-size: 0.72rem;
+  background: rgba(0, 0, 0, 0.16);
+  padding: 1px 7px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+
+.city-chip.active .city-count {
+  background: var(--bg-dark-forest);
+  color: var(--lime-accent);
 }
 
 /* Category Filter Pills Row */
@@ -1510,6 +1593,54 @@ h1, h2, h3, .serif-font {
 .itinerary-header h2 {
   color: var(--text-light);
   font-size: 2.2rem;
+}
+
+/* Circuit Switcher Chips */
+.circuit-switcher-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  scrollbar-width: thin;
+}
+
+.circuit-switcher-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+.circuit-switcher-row::-webkit-scrollbar-thumb {
+  background: rgba(159, 232, 89, 0.35);
+  border-radius: 2px;
+}
+
+.circuit-chip {
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #D1E0D7;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.circuit-chip:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.circuit-chip.active {
+  background: var(--lime-accent);
+  color: var(--bg-dark-forest);
+  border-color: var(--lime-accent);
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(159, 232, 89, 0.3);
 }
 
 .itinerary-steps-grid {
