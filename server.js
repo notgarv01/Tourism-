@@ -104,8 +104,9 @@ const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
+      let payload = {};
       try {
-        const payload = JSON.parse(body || '{}');
+        payload = JSON.parse(body || '{}');
         const geminiKeys = getGeminiApiKeys();
 
         if (geminiKeys.length === 0) {
