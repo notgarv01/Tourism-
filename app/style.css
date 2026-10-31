@@ -1573,49 +1573,7 @@ h1, h2, h3, .serif-font {
   color: var(--text-secondary);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1100px) {
-  .explorer-grid-split {
-    grid-template-columns: 1fr;
-  }
-  .explorer-map-pane {
-    position: static;
-  }
-  .explorer-map-pane .map-card-wrapper {
-    height: 480px;
-  }
-  .explorer-control-panel {
-    grid-template-columns: 1fr;
-  }
-  .explorer-cards-pane {
-    height: 620px;
-    max-height: 620px;
-  }
-}
-
-@media (max-width: 768px) {
-  .explorer-outer-section {
-    padding: 0 16px;
-  }
-  .explorer-container {
-    padding: 24px 20px;
-  }
-  .explorer-header-block {
-    flex-direction: column;
-  }
-  .explorer-search-bar {
-    width: 100%;
-  }
-  .explorer-top-actions {
-    width: 100%;
-  }
-  .destinations-visual-grid {
-    grid-template-columns: 1fr;
-  }
-  .featured-stats-row {
-    grid-template-columns: 1fr;
-  }
-}
+/* Responsive styles defined in consolidated system at bottom of stylesheet */
 
 /* ==========================================================================
    DYNAMIC ITINERARY PLANNER & RE-ROUTER
@@ -1957,15 +1915,419 @@ h1, h2, h3, .serif-font {
   transform: translateY(0);
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .hero-section { grid-template-columns: 1fr; }
-  .showcase-grid { grid-template-columns: 1fr; }
-  .engine-workspace { grid-template-columns: 1fr; }
-  .control-panel { grid-template-columns: 1fr; }
-  .itinerary-steps-grid { grid-template-columns: 1fr 1fr; }
-  .stats-banner { grid-template-columns: 1fr; gap: 20px; }
-  .hero-headline { font-size: 2.8rem; }
-  .navbar { padding: 20px 24px; }
-  .hero-section, .engine-container, .itinerary-section, .stats-banner, .showcase-grid { padding: 0 24px; }
+
+
+/* ==========================================================================
+   MOBILE NAVIGATION DRAWER & TOGGLE STYLES
+   ========================================================================== */
+.nav-mobile-toggle {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  padding: 8px;
+  width: 44px;
+  height: 44px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  z-index: 1001;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-mobile-toggle:hover {
+  background: rgba(20, 51, 37, 0.08);
+  border-color: var(--text-primary);
+}
+
+.hamburger-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-mobile-toggle.open .hamburger-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+  background: var(--lime-accent);
+}
+
+.nav-mobile-toggle.open .hamburger-bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.nav-mobile-toggle.open .hamburger-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+  background: var(--lime-accent);
+}
+
+/* Mobile Nav Drawer */
+.mobile-nav-drawer {
+  display: none;
+  position: fixed;
+  top: 76px;
+  left: 0;
+  right: 0;
+  background: rgba(10, 27, 19, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  padding: 20px 20px 28px;
+  z-index: 999;
+  transform: translateY(-12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-nav-drawer.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-nav-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mobile-nav-link {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #E2ECE6;
+  text-decoration: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(159, 232, 89, 0.35);
+  color: var(--lime-accent);
+  transform: translateX(4px);
+}
+
+.mobile-nav-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-nav-actions .btn-pill {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   CONSOLIDATED FLUID RESPONSIVE SYSTEM (Desktop, Tablet, Mobile)
+   ========================================================================== */
+
+/* 1. Large Tablets & Small Laptops (max-width: 1100px) */
+@media (max-width: 1100px) {
+  .hero-section {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding: 0 32px;
+  }
+  .hero-content {
+    max-width: 100%;
+  }
+  .hero-subtext {
+    max-width: 100%;
+  }
+  .explorer-grid-split {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .explorer-map-pane {
+    position: static;
+  }
+  .explorer-map-pane .map-card-wrapper {
+    height: 480px;
+  }
+  .explorer-cards-pane {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+  .explorer-control-panel {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .itinerary-steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 2. Tablets & Mobile Navigation Breakpoint (max-width: 880px) */
+@media (max-width: 880px) {
+  .navbar {
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(253, 251, 247, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-light);
+  }
+  .nav-desktop,
+  .navbar .nav-actions {
+    display: none;
+  }
+  .nav-mobile-toggle {
+    display: flex;
+  }
+  .mobile-nav-drawer {
+    display: block;
+  }
+  .explorer-header-block {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .explorer-top-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .explorer-search-bar {
+    flex: 1;
+    width: auto !important;
+  }
+  .explorer-search-bar:focus-within {
+    width: auto !important;
+  }
+}
+
+/* 3. Phablets & Standard Mobile Phones (max-width: 768px) */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 0 16px;
+    margin: 12px auto 28px;
+    gap: 24px;
+  }
+  .hero-headline {
+    font-size: clamp(2.2rem, 7.5vw, 3.2rem);
+    line-height: 1.1;
+  }
+  .hero-subtext {
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+  .stats-banner {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 0 16px;
+    margin-bottom: 36px;
+  }
+  .stat-item {
+    padding-top: 18px;
+  }
+  .stat-num {
+    font-size: clamp(2.4rem, 8vw, 3rem);
+  }
+  .explorer-outer-section {
+    padding: 0 12px;
+    margin-bottom: 48px;
+  }
+  .explorer-container {
+    padding: 20px 14px;
+    border-radius: 20px;
+  }
+  .explorer-container::before {
+    display: none;
+  }
+  .explorer-title {
+    font-size: clamp(1.6rem, 5.5vw, 2.1rem);
+  }
+  .explorer-filter-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .places-count-pill {
+    align-self: flex-start;
+  }
+  .explorer-map-pane .map-card-wrapper {
+    height: 380px;
+  }
+  .destinations-visual-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .visual-place-card {
+    height: 180px;
+  }
+  .itinerary-section {
+    padding: 0 12px;
+    margin-bottom: 48px;
+  }
+  .itinerary-box {
+    padding: 24px 16px;
+    border-radius: 20px;
+  }
+  .itinerary-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .itinerary-header h2 {
+    font-size: clamp(1.6rem, 5.5vw, 2rem);
+  }
+  .site-footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+    padding: 28px 16px;
+  }
+  .discovery-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    border-radius: 16px;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* 4. Small Mobile Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 12px 16px;
+  }
+  .nav-brand {
+    font-size: 1.4rem;
+  }
+  .badge-india {
+    font-size: 0.58rem;
+    padding: 1px 6px;
+  }
+  .hero-cta-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  .hero-cta-group .btn-pill {
+    width: 100%;
+  }
+  .hero-visual {
+    min-height: 270px;
+    padding: 0;
+    transform: scale(0.72);
+    transform-origin: top center;
+    margin-bottom: -40px;
+  }
+  .skyline-art {
+    display: none;
+  }
+  .explorer-control-panel {
+    padding: 14px;
+    gap: 14px;
+  }
+  .explorer-control-panel .segmented-control {
+    flex-wrap: wrap;
+  }
+  .explorer-control-panel .seg-btn {
+    padding: 6px 10px;
+    font-size: 0.76rem;
+  }
+  .weather-pills-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .weather-btn {
+    padding: 6px 10px;
+    font-size: 0.76rem;
+  }
+  .explorer-map-pane .map-card-wrapper {
+    height: 330px;
+  }
+  .traffic-ticker-bar {
+    font-size: 0.7rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px 12px;
+  }
+  .featured-image-box {
+    height: 165px;
+  }
+  .featured-details-content {
+    padding: 12px 14px 16px;
+    gap: 12px;
+  }
+  .featured-title-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .btn-view-details {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  .featured-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 8px 6px;
+  }
+  .insight-value {
+    font-size: 1rem;
+  }
+  .insight-header {
+    font-size: 0.62rem;
+  }
+  .featured-meta-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.72rem;
+  }
+  .itinerary-steps-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .step-card {
+    min-height: auto;
+    padding: 16px;
+  }
+  .diff-alert-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  .modal-sheet {
+    width: 95%;
+    max-height: 92vh;
+    padding: 20px 14px;
+    border-radius: 18px;
+  }
+  .close-btn {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+  }
 }

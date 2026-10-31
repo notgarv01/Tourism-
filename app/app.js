@@ -1404,6 +1404,52 @@ function initModals() {
   document.getElementById("closeJudgeModal").addEventListener("click", () => {
     judgeModal.classList.remove("open");
   });
+
+  // Mobile Navigation Drawer Toggle & Links
+  const navMobileToggle = document.getElementById("navMobileToggle");
+  const mobileNavDrawer = document.getElementById("mobileNavDrawer");
+  if (navMobileToggle && mobileNavDrawer) {
+    navMobileToggle.addEventListener("click", () => {
+      navMobileToggle.classList.toggle("open");
+      mobileNavDrawer.classList.toggle("open");
+    });
+
+    document.querySelectorAll(".mobile-nav-link").forEach(link => {
+      link.addEventListener("click", () => {
+        navMobileToggle.classList.remove("open");
+        mobileNavDrawer.classList.remove("open");
+      });
+    });
+
+    const openJudgeLinkMobile = document.getElementById("openJudgeLinkMobile");
+    if (openJudgeLinkMobile) {
+      openJudgeLinkMobile.addEventListener("click", (e) => {
+        e.preventDefault();
+        navMobileToggle.classList.remove("open");
+        mobileNavDrawer.classList.remove("open");
+        judgeModal.classList.add("open");
+      });
+    }
+
+    const btnReportModalOpenMobile = document.getElementById("btnReportModalOpenMobile");
+    if (btnReportModalOpenMobile) {
+      btnReportModalOpenMobile.addEventListener("click", () => {
+        navMobileToggle.classList.remove("open");
+        mobileNavDrawer.classList.remove("open");
+        document.getElementById("btnReportModalOpen").click();
+      });
+    }
+
+    const btnQuickDemoMobile = document.getElementById("btnQuickDemoMobile");
+    if (btnQuickDemoMobile) {
+      btnQuickDemoMobile.addEventListener("click", () => {
+        navMobileToggle.classList.remove("open");
+        mobileNavDrawer.classList.remove("open");
+        const quickDemoBtn = document.getElementById("btnQuickDemo");
+        if (quickDemoBtn) quickDemoBtn.click();
+      });
+    }
+  }
 }
 
 // ==========================================================================

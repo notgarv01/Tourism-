@@ -18,20 +18,41 @@
     <a href="#" class="nav-brand">
       <span class="brand-dot"></span>
       norush
+      <span class="badge-india">PAN-INDIA</span>
     </a>
-    <nav>
+    <nav class="nav-desktop">
       <ul class="nav-links">
-        <li><a href="#predictions">Predictions & Map</a></li>
+        <li><a href="#predictions">Predictions &amp; Map</a></li>
         <li><a href="#itinerary">Smart Circuits</a></li>
         <li><a href="#how-it-works">How It Works</a></li>
-        <li><a href="#judge-playbook" id="openJudgeLink">Judge Playbook (12 Q&As)</a></li>
+        <li><a href="#judge-playbook" id="openJudgeLink">Judge Playbook (12 Q&amp;As)</a></li>
       </ul>
     </nav>
     <div class="nav-actions">
       <button class="btn-pill btn-pill-outline" id="btnReportModalOpen">Report Queue</button>
       <button class="btn-pill btn-pill-lime" id="btnQuickDemo">Test Rain Re-plan</button>
     </div>
+    <!-- Mobile Hamburger Toggle Button -->
+    <button class="nav-mobile-toggle" id="navMobileToggle" aria-label="Toggle Navigation Menu">
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
   </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-nav-drawer" id="mobileNavDrawer">
+    <ul class="mobile-nav-links">
+      <li><a href="#predictions" class="mobile-nav-link">Predictions &amp; Map</a></li>
+      <li><a href="#itinerary" class="mobile-nav-link">Smart Circuits</a></li>
+      <li><a href="#how-it-works" class="mobile-nav-link">How It Works</a></li>
+      <li><a href="#judge-playbook" class="mobile-nav-link" id="openJudgeLinkMobile">Judge Playbook (12 Q&amp;As)</a></li>
+    </ul>
+    <div class="mobile-nav-actions">
+      <button class="btn-pill btn-pill-outline" id="btnReportModalOpenMobile">Report Queue</button>
+      <button class="btn-pill btn-pill-lime" id="btnQuickDemoMobile">Test Rain Re-plan</button>
+    </div>
+  </div>
 
   <!-- HERO SECTION (Advocado Headline & Node Canvas Style) -->
   <section class="hero-section">
