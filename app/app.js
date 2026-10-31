@@ -261,7 +261,8 @@ function initMap() {
   map = L.map('leafletMap', {
     center: [22.8, 79.2],
     zoom: 5,
-    zoomControl: true
+    zoomControl: true,
+    scrollWheelZoom: false
   });
 
   // Base map tiles using TomTom Map Display API
@@ -880,8 +881,8 @@ function renderExplorer() {
         </div>
 
         <div class="featured-stats-row">
-          <!-- 1. Predicted Density -->
-          <div class="stat-insight-card">
+          <!-- 1. Predicted Density (Prominent Top Row on Mobile) -->
+          <div class="stat-insight-card stat-card-density">
             <div class="insight-header">
               <span>👥</span>
               <span>Predicted Density</span>
@@ -893,7 +894,7 @@ function renderExplorer() {
           </div>
 
           <!-- 2. Best Visit Time -->
-          <div class="stat-insight-card">
+          <div class="stat-insight-card stat-card-time">
             <div class="insight-header">
               <span>🕒</span>
               <span>Best Visit Time</span>
@@ -903,7 +904,7 @@ function renderExplorer() {
           </div>
 
           <!-- 3. Recommended Days -->
-          <div class="stat-insight-card">
+          <div class="stat-insight-card stat-card-days">
             <div class="insight-header">
               <span>📅</span>
               <span>Recommended Days</span>
@@ -2577,13 +2578,13 @@ function renderGeminiAdvisorBox(placeId) {
   }
 
   container.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-      <div style="display:flex; align-items:center; gap:8px;">
+    <div class="gemini-header-row">
+      <div class="gemini-header-left">
         <span style="font-size:1.15rem;">✨</span>
         <span style="font-weight:700; color:#FFF; font-size:0.9rem;">NoRush AI Intelligence Briefing</span>
         <span style="background:rgba(159,232,89,0.2); color:#9FE859; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:12px; border:1px solid rgba(159,232,89,0.4); letter-spacing:0.5px;">POWERED BY GOOGLE GEMINI</span>
       </div>
-      <div style="display:flex; align-items:center; gap:6px;">
+      <div class="gemini-confidence-pill">
         <span style="font-size:0.75rem; color:#A2B6AC;">Confidence Rating:</span>
         <strong style="color:#9FE859; font-size:0.85rem;">${gemini.confidenceScore || 95}% High</strong>
       </div>
@@ -2594,7 +2595,7 @@ function renderGeminiAdvisorBox(placeId) {
     <div style="font-size:0.81rem; color:#D1E7DD; line-height:1.48; margin-bottom:8px;">
       ${gemini.situationReport || 'Live telemetry verified across access corridors.'}
     </div>
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:0.78rem;">
+    <div class="gemini-footer-row">
       <div style="color:#FFF;">
         💡 <strong style="color:#F59E0B;">AI Tactical Advice:</strong> ${gemini.actionableAdvice || 'Proceed with planned visit.'}
       </div>

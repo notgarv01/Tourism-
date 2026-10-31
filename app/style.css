@@ -1386,6 +1386,61 @@ h1, h2, h3, .serif-font {
   transition: width 0.4s ease;
 }
 
+.stat-card-time .insight-value,
+.stat-card-days .insight-value {
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+/* Google Gemini AI Intelligence Briefing Card Components */
+.gemini-ai-briefing-card {
+  margin: 12px 0 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(13,32,23,0.95) 0%, rgba(20,48,35,0.95) 100%);
+  border: 1px solid rgba(159,232,89,0.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.gemini-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gemini-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gemini-confidence-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gemini-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+}
+
 /* Bottom Meta Info Row */
 .featured-meta-bar {
   display: flex;
@@ -2281,7 +2336,163 @@ body.modal-open {
     align-self: flex-start;
   }
   .explorer-map-pane .map-card-wrapper {
-    height: 380px;
+    height: 480px !important;
+  }
+  .explorer-map-pane .map-header-bar {
+    padding: 10px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .explorer-map-pane .map-header-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .explorer-map-pane .map-header-btns {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .explorer-map-pane .map-header-btns .btn-pill {
+    flex: 1 1 50% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 7px 10px !important;
+  }
+  .explorer-map-pane #mapStatusBadge {
+    display: none !important;
+  }
+  .traffic-ticker-bar {
+    padding: 10px 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    font-size: 0.74rem !important;
+  }
+  .traffic-ticker-bar #btnSimulateTrafficJam {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 7px 12px !important;
+    font-size: 0.76rem !important;
+  }
+  .heading-destination-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+  .heading-destination-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .heading-select-element {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+  }
+  .explorer-control-panel .segmented-control,
+  .explorer-control-panel .weather-pills-bar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .explorer-control-panel .seg-btn,
+  .explorer-control-panel .weather-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 0.76rem !important;
+    border-radius: 8px !important;
+  }
+  /* 2-Tier Featured Prediction Layout on 768px */
+  .featured-stats-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+  .stat-card-density,
+  .featured-stats-row .stat-insight-card:first-child {
+    grid-column: 1 / -1 !important;
+    background: rgba(0, 0, 0, 0.25) !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+  .stat-card-density .insight-value {
+    font-size: 1.6rem !important;
+    margin: 4px 0 !important;
+  }
+  .stat-card-time,
+  .stat-card-days {
+    background: rgba(0, 0, 0, 0.18) !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  .stat-card-time .insight-value {
+    font-size: clamp(0.85rem, 3.2vw, 1.05rem) !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    line-height: 1.2 !important;
+  }
+  .stat-card-days .insight-value {
+    font-size: clamp(0.95rem, 4vw, 1.18rem) !important;
+    white-space: nowrap !important;
+  }
+  .stat-insight-card .insight-sub {
+    font-size: 0.7rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .featured-telemetry-breakdown {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 10px !important;
+    padding: 10px 12px !important;
+  }
+  .featured-telemetry-breakdown > div {
+    font-size: 0.74rem !important;
+  }
+  .featured-telemetry-breakdown > div:nth-child(5),
+  .featured-telemetry-breakdown > div[style*="width:100%"] {
+    grid-column: 1 / -1 !important;
+  }
+  .gemini-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+  .gemini-header-left {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .gemini-confidence-pill {
+    align-self: flex-start !important;
+  }
+  .gemini-footer-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .gemini-footer-row .btn-pill {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 7px 12px !important;
   }
   .destinations-visual-grid {
     grid-template-columns: 1fr;
@@ -2366,48 +2577,94 @@ body.modal-open {
     font-size: 0.76rem;
   }
   .explorer-map-pane .map-card-wrapper {
-    height: 330px;
+    height: 480px !important;
+  }
+  .explorer-map-pane .map-header-bar {
+    padding: 8px 10px !important;
   }
   .traffic-ticker-bar {
-    font-size: 0.7rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding: 8px 12px;
+    font-size: 0.72rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+  .traffic-ticker-bar #btnSimulateTrafficJam {
+    width: 100% !important;
+    padding: 6px 10px !important;
+    font-size: 0.74rem !important;
   }
   .featured-image-box {
-    height: 165px;
+    height: 175px !important;
   }
   .featured-details-content {
-    padding: 12px 14px 16px;
-    gap: 12px;
+    padding: 12px 12px 16px !important;
+    gap: 10px !important;
   }
   .featured-title-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .featured-place-names h3 {
+    font-size: 1.35rem !important;
+    line-height: 1.15 !important;
+    word-break: break-word !important;
   }
   .btn-view-details {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 8px 14px !important;
+    font-size: 0.82rem !important;
   }
+  /* Spacious 2-Tier Mobile Prediction Architecture */
   .featured-stats-row {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    padding: 8px 6px;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 10px 10px !important;
   }
-  .insight-value {
-    font-size: 1rem;
+  .stat-card-density,
+  .featured-stats-row .stat-insight-card:first-child {
+    grid-column: 1 / -1 !important;
+    padding: 10px 12px !important;
+  }
+  .stat-card-density .insight-value {
+    font-size: 1.5rem !important;
+  }
+  .stat-card-time,
+  .stat-card-days {
+    padding: 8px 10px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  .stat-card-time .insight-value {
+    font-size: 0.88rem !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    line-height: 1.2 !important;
+  }
+  .stat-card-days .insight-value {
+    font-size: 1.05rem !important;
+    white-space: nowrap !important;
   }
   .insight-header {
-    font-size: 0.62rem;
+    font-size: 0.68rem !important;
+  }
+  .mini-meter-track {
+    height: 5px !important;
+    margin-top: 5px !important;
+  }
+  .featured-telemetry-breakdown {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
   }
   .featured-meta-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    font-size: 0.72rem;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    font-size: 0.72rem !important;
   }
   .itinerary-steps-grid {
     grid-template-columns: 1fr;
