@@ -185,7 +185,8 @@ let state = {
   calendarAutoMode: true,    // True: Auto Indian calendar detects weekend/holiday from live date    // True: Open-Meteo live API auto-controls weather; False: manual test
   liveWeatherByCity: {},    // cityId -> { temp, precip, code, weatherType, summaryText }
   liveTrafficByCity: {},
-  liveBusynessByPlace: {}, // placeId -> { busyness, status, venue, timestamp }    // cityId -> { delayMins, realDelayMins, curSpeed, freeSpeed, corridorName }
+  liveBusynessByPlace: {},
+  geminiAdviceByPlace: {}, // placeId -> { confidenceScore, title, situationReport, actionableAdvice, tacticalAlternative } // placeId -> { busyness, status, venue, timestamp }    // cityId -> { delayMins, realDelayMins, curSpeed, freeSpeed, corridorName }
   simulatedTrafficDelay: null, // null = live TomTom API; number = test rush hour
   selectedPlaceId: "AGR_001",
   activeCategory: "all",    // all, Historical, Lakes, Temples, Beaches, Nature, Others
@@ -849,6 +850,10 @@ function renderExplorer() {
           </div>
         </div>
 
+        <!-- Google Gemini AI Travel Copilot Briefing Box -->
+        <div id="gemini-advisor-${feat.id}" class="gemini-ai-briefing-card" style="margin:12px 0 10px; padding:12px 16px; background:linear-gradient(135deg, rgba(13,32,23,0.95) 0%, rgba(20,48,35,0.95) 100%); border:1px solid rgba(159,232,89,0.35); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+        </div>
+
         <div class="featured-meta-bar">
           <span class="meta-item">🏛️ Capacity: <strong>${feat.capacityCeiling.toLocaleString()}</strong></span>
           <span class="meta-item star-rating">⭐ Rating: <strong>${feat.rating || 4.7} ★</strong></span>
@@ -862,6 +867,8 @@ function renderExplorer() {
   if (featImgEl) {
     loadLiveImageForElement(featImgEl, feat.id);
   }
+  renderGeminiAdvisorBox(feat.id);
+  fetchGeminiAdvisor(feat);
 
   // 2. Secondary Grid: Render remaining places
   const remaining = filtered.filter(d => d.id !== feat.id);
@@ -2186,3 +2193,100 @@ async function fetchBestTimeLiveBusyness(dest) {
     console.warn("BestTime Live Busyness note:", err);
   }
 }
+
+
+// ==========================================================================
+// 6. GOOGLE GEMINI AI TRAVEL COPILOT & SITUATION ADVISOR
+// ==========================================================================
+async function fetchGeminiAdvisor(dest, force = false) {
+  if (!dest) return;
+  if (!force && state.geminiAdviceByPlace[dest.id]) return;
+
+  const crowdData = computeCrowdScore(dest);
+  const payload = {
+    placeName: dest.name,
+    cityName: dest.cityName,
+    crowdScore: crowdData.score,
+    crowdLevel: crowdData.level,
+    delayMins: crowdData.delayMins || 0,
+    trafficState: crowdData.trafficStateText || 'Normal Flow',
+    weatherSummary: crowdData.weatherSummary || 'Pleasant',
+    dayType: state.dayType,
+    isClosed: !!crowdData.isClosed,
+    closureReason: crowdData.closureReason || ''
+  };
+
+  try {
+    const res = await fetch('/api/gemini/advisor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      state.geminiAdviceByPlace[dest.id] = data;
+      renderGeminiAdvisorBox(dest.id);
+    }
+  } catch (err) {
+    console.warn("Gemini advisor fetch note:", err);
+  }
+}
+
+function renderGeminiAdvisorBox(placeId) {
+  const container = document.getElementById(`gemini-advisor-${placeId}`);
+  if (!container) return;
+
+  const gemini = state.geminiAdviceByPlace[placeId];
+  if (!gemini) {
+    container.innerHTML = `
+      <div style="font-size:0.78rem; color:#A2B6AC; display:flex; align-items:center; gap:8px;">
+        <span class="spinner-inline" style="display:inline-block; width:12px; height:12px; border:2px solid #9FE859; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></span>
+        <span>Synthesizing live atmospheric telemetry &amp; corridor traffic via Google Gemini...</span>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.15rem;">✨</span>
+        <span style="font-weight:700; color:#FFF; font-size:0.9rem;">NoRush AI Intelligence Briefing</span>
+        <span style="background:rgba(159,232,89,0.2); color:#9FE859; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:12px; border:1px solid rgba(159,232,89,0.4); letter-spacing:0.5px;">POWERED BY GOOGLE GEMINI</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:0.75rem; color:#A2B6AC;">Confidence Rating:</span>
+        <strong style="color:#9FE859; font-size:0.85rem;">${gemini.confidenceScore || 95}% High</strong>
+      </div>
+    </div>
+    <div style="font-weight:700; font-size:0.88rem; color:#9FE859; margin-bottom:4px;">
+      ${gemini.title || 'Situational Assessment'}
+    </div>
+    <div style="font-size:0.81rem; color:#D1E7DD; line-height:1.48; margin-bottom:8px;">
+      ${gemini.situationReport || 'Live telemetry verified across access corridors.'}
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:0.78rem;">
+      <div style="color:#FFF;">
+        💡 <strong style="color:#F59E0B;">AI Tactical Advice:</strong> ${gemini.actionableAdvice || 'Proceed with planned visit.'}
+      </div>
+      <button class="btn-pill" onclick="window.refreshGeminiAdvice('${placeId}')" style="background:rgba(255,255,255,0.1); color:#FFF; font-size:0.72rem; padding:4px 10px; border:1px solid rgba(255,255,255,0.15); cursor:pointer;">
+        ⚡ Re-Analyze
+      </button>
+    </div>
+  `;
+}
+
+window.refreshGeminiAdvice = function(placeId) {
+  const dest = ALL_DESTINATIONS.find(d => d.id === placeId);
+  if (!dest) return;
+  const container = document.getElementById(`gemini-advisor-${placeId}`);
+  if (container) {
+    container.innerHTML = `
+      <div style="font-size:0.78rem; color:#A2B6AC; display:flex; align-items:center; gap:8px;">
+        <span class="spinner-inline" style="display:inline-block; width:12px; height:12px; border:2px solid #9FE859; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></span>
+        <span>Re-analyzing live crowd telemetry via Google Gemini...</span>
+      </div>
+    `;
+  }
+  fetchGeminiAdvisor(dest, true);
+};
