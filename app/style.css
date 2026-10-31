@@ -1779,6 +1779,11 @@ h1, h2, h3, .serif-font {
 }
 
 /* MODAL & DRAWERS */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+}
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -1794,20 +1799,24 @@ h1, h2, h3, .serif-font {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
+  overscroll-behavior: contain;
 }
 
 .modal-backdrop.open {
   opacity: 1;
   pointer-events: auto;
+  cursor: pointer;
 }
 
 .modal-sheet {
+  cursor: default;
   background: #FFFFFF;
   border-radius: var(--radius-card);
   max-width: 650px;
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 36px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.25);
   position: relative;
