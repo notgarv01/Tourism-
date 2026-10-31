@@ -1265,8 +1265,25 @@ function resetItinerary() {
 }
 
 // ==========================================================================
-// 7. INTENT-PRESERVING ALTERNATIVE RECOMMENDER MODAL
+// 7. MODAL UTILITIES & INTENT-PRESERVING ALTERNATIVE RECOMMENDER MODAL
 // ==========================================================================
+function openModal(modalEl) {
+  if (!modalEl) return;
+  modalEl.classList.add("open");
+  document.body.classList.add("modal-open");
+  document.documentElement.classList.add("modal-open");
+}
+
+function closeModal(modalEl) {
+  if (!modalEl) return;
+  modalEl.classList.remove("open");
+  const anyOpen = document.querySelectorAll(".modal-backdrop.open").length > 0;
+  if (!anyOpen) {
+    document.body.classList.remove("modal-open");
+    document.documentElement.classList.remove("modal-open");
+  }
+}
+
 function openAlternativeModal(placeId) {
   const orig = ALL_DESTINATIONS.find(d => d.id === placeId);
   if (!orig) return;
@@ -1325,11 +1342,11 @@ function openAlternativeModal(placeId) {
     <strong>${orig.suggestedQuietSlot || 'Early morning before 10 AM'}</strong>. Historical counts show vastly lower footfall!
   `;
 
-  document.getElementById("alternativeModal").classList.add("open");
+  openModal(document.getElementById("alternativeModal"));
 }
 
 function selectAndClose(placeId) {
-  document.getElementById("alternativeModal").classList.remove("open");
+  closeModal(document.getElementById("alternativeModal"));
   selectDestination(placeId);
 }
 
@@ -1337,13 +1354,72 @@ function selectAndClose(placeId) {
 // 8. MODALS SETUP (CITIZEN REPORT & JUDGE PLAYBOOK)
 // ==========================================================================
 function initModals() {
-  // Alternative Modal Close
-  document.getElementById("closeAltModal").addEventListener("click", () => {
-    document.getElementById("alternativeModal").classList.remove("open");
+  const attachModalEvents = (modalEl, closeBtnId) => {
+    if (!modalEl) return;
+    if (modalEl.dataset.backdropInitialized) return;
+    modalEl.dataset.backdropInitialized = "true";
+
+    const closeBtn = closeBtnId ? document.getElementById(closeBtnId) : modalEl.querySelector(".close-btn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeModal(modalEl);
+      });
+    }
+
+    // Close when clicking directly on the backdrop (outside .modal-sheet)
+    modalEl.addEventListener("click", (e) => {
+      // Don't close if user is highlighting text inside the modal
+      const selection = window.getSelection ? window.getSelection().toString() : "";
+      if (selection && selection.trim().length > 0) return;
+
+      if (e.target === modalEl || !e.target.closest(".modal-sheet")) {
+        closeModal(modalEl);
+      }
+    });
+
+    // Prevent clicks inside .modal-sheet from bubbling to backdrop
+    const sheet = modalEl.querySelector(".modal-sheet");
+    if (sheet) {
+      sheet.addEventListener("click", (e) => {
+        if (!e.target.closest(".close-btn")) {
+          e.stopPropagation();
+        }
+      });
+    }
+
+    // Prevent wheel and touch scrolling on background window when outside .modal-sheet
+    modalEl.addEventListener("wheel", (e) => {
+      if (!e.target.closest(".modal-sheet")) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    modalEl.addEventListener("touchmove", (e) => {
+      if (!e.target.closest(".modal-sheet")) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  };
+
+  // Attach backdrop events to all modals
+  const altModal = document.getElementById("alternativeModal");
+  attachModalEvents(altModal, "closeAltModal");
+
+  const reportModal = document.getElementById("reportModal");
+  attachModalEvents(reportModal, "closeReportModal");
+
+  const judgeModal = document.getElementById("judgeModal");
+  attachModalEvents(judgeModal, "closeJudgeModal");
+
+  // Press ESC to close any open modal
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      document.querySelectorAll(".modal-backdrop.open").forEach(m => closeModal(m));
+    }
   });
 
-  // Citizen Report Modal
-  const reportModal = document.getElementById("reportModal");
+  // Citizen Report Modal Trigger
   document.getElementById("btnReportModalOpen").addEventListener("click", () => {
     // Populate select grouped by city
     const select = document.getElementById("reportPlaceSelect");
@@ -1364,11 +1440,7 @@ function initModals() {
       }
     });
 
-    reportModal.classList.add("open");
-  });
-
-  document.getElementById("closeReportModal").addEventListener("click", () => {
-    reportModal.classList.remove("open");
+    openModal(reportModal);
   });
 
   // Report Rating Selection
@@ -1388,21 +1460,16 @@ function initModals() {
       rating: selectedRating,
       timestamp: new Date()
     };
-    reportModal.classList.remove("open");
+    closeModal(reportModal);
     refreshAll();
     selectDestination(placeId);
     alert("Report recorded! Destination provenance badge updated to RECENT (Visitor Verified) with 30-min decay.");
   });
 
   // Judge Playbook Modal
-  const judgeModal = document.getElementById("judgeModal");
   document.getElementById("openJudgeLink").addEventListener("click", (e) => {
     e.preventDefault();
-    judgeModal.classList.add("open");
-  });
-
-  document.getElementById("closeJudgeModal").addEventListener("click", () => {
-    judgeModal.classList.remove("open");
+    openModal(judgeModal);
   });
 
   // Mobile Navigation Drawer Toggle & Links
