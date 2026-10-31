@@ -28,6 +28,24 @@ const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(parsedUrl.pathname);
 
+  if (pathname === '/api/config') {
+    let unsplashKey = '';
+    let besttimeKey = '';
+    try {
+      const envPath = path.join(__dirname, '.env');
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        const match = envContent.match(/UNSPLASH_ACCESS_KEY=(.+)/);
+        if (match) unsplashKey = match[1].trim();
+        const matchB = envContent.match(/BESTTIME_API_KEY=(.+)/);
+        if (matchB) besttimeKey = matchB[1].trim();
+      }
+    } catch (e) {}
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ unsplashKey, besttimeKey }));
+    return;
+  }
+
   if (pathname === '/' || pathname === '') {
     pathname = '/index.html';
   }

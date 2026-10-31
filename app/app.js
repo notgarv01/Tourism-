@@ -9,6 +9,10 @@ let state = {
   currentHour: "13:00",
   dayType: "weekend",       // weekday, weekend, holiday
   weather: "clear",         // clear, heat, rain
+  weatherAutoMode: true,    // True: Open-Meteo live API auto-controls weather; False: manual test
+  liveWeatherByCity: {},    // cityId -> { temp, precip, code, weatherType, summaryText }
+  liveTrafficByCity: {},    // cityId -> { delayMins, realDelayMins, curSpeed, freeSpeed, corridorName }
+  simulatedTrafficDelay: null, // null = live TomTom API; number = test rush hour
   selectedPlaceId: "AGR_001",
   activeCategory: "all",    // all, Historical, Lakes, Temples, Beaches, Nature, Others
   searchQuery: "",
@@ -28,11 +32,26 @@ document.addEventListener("DOMContentLoaded", () => {
   try { initMap(); } catch (e) { console.error("Error in initMap:", e); }
   try { initCitySelector(); } catch (e) { console.error("Error in initCitySelector:", e); }
   try { initControls(); } catch (e) { console.error("Error in initControls:", e); }
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("simulateJam") === "1") {
+      state.simulatedTrafficDelay = 14;
+    }
+    const autoSearch = urlParams.get("searchPlace");
+    if (autoSearch) {
+      setTimeout(() => {
+        triggerDynamicPanIndiaDiscovery(autoSearch);
+      }, 800);
+    }
+  } catch (e) {}
+  try { initLiveTelemetryPipeline(); } catch (e) { console.error("Error in initLiveTelemetryPipeline:", e); }
   try { renderExplorer(); } catch (e) { console.error("Error in renderExplorer:", e); }
   try { renderItinerary(); } catch (e) { console.error("Error in renderItinerary:", e); }
   try { initModals(); } catch (e) { console.error("Error in initModals:", e); }
   try { initJudgePlaybook(); } catch (e) { console.error("Error in initJudgePlaybook:", e); }
   try { initRerouteAssistant(); } catch (e) { console.error("Error in initRerouteAssistant:", e); }
+  try { initHorizontalWheelScroll(); } catch (e) { console.error("Error in initHorizontalWheelScroll:", e); }
+  try { initLiveImagePipeline(); } catch (e) { console.error("Error in initLiveImagePipeline:", e); }
 });
 
 // ==========================================================================
@@ -83,18 +102,38 @@ function initMap() {
   });
 }
 
-// Fetch live telemetry from TomTom Traffic Flow API for the current city
-async function fetchTomTomLiveTraffic(cityId) {
+// Real-Time Telemetry Pipeline (TomTom Traffic Flow API + Open-Meteo Weather API)
+function initLiveTelemetryPipeline() {
+  fetchTomTomLiveTraffic(state.currentCityId);
+  fetchOpenMeteoLiveWeather(state.currentCityId);
+
+  // Auto-refresh telemetry every 60 seconds for live synchronization
+  setInterval(() => {
+    fetchTomTomLiveTraffic(state.currentCityId);
+    fetchOpenMeteoLiveWeather(state.currentCityId);
+  }, 60000);
+}
+
+// Fetch live telemetry from TomTom Traffic Flow API for current city or coords
+async function fetchTomTomLiveTraffic(cityId, customCoords) {
   try {
-    const city = INDIA_CITIES.find(c => c.id === cityId) || INDIA_CITIES[0];
-    const pt = city.trafficPoint || [24.5764, 73.6835];
-    const url = `https://api.tomtom.com/traffic/services/4/flowSegmentData/relative0/10/json?point=${pt[0]},${pt[1]}&key=${TOMTOM_API_KEY}`;
+    let pt = [24.5764, 73.6835];
+    let corridorName = "Pan-India Tourist Corridors";
+    if (customCoords && Array.isArray(customCoords)) {
+      pt = customCoords;
+      corridorName = "Access Corridor";
+    } else {
+      const city = INDIA_CITIES.find(c => c.id === cityId) || INDIA_CITIES[0];
+      pt = city.trafficPoint || city.center || [24.5764, 73.6835];
+      corridorName = city.trafficCorridorName || city.name;
+    }
 
     const labelEl = document.getElementById("trafficCorridorLabel");
     if (labelEl) {
-      labelEl.textContent = `${city.trafficCorridorName || city.name}:`;
+      labelEl.textContent = `${corridorName}:`;
     }
 
+    const url = `https://api.tomtom.com/traffic/services/4/flowSegmentData/relative0/10/json?point=${pt[0]},${pt[1]}&key=${TOMTOM_API_KEY}`;
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
@@ -102,16 +141,101 @@ async function fetchTomTomLiveTraffic(cityId) {
       if (flow) {
         const curSpeed = flow.currentSpeed || 20;
         const freeSpeed = flow.freeFlowSpeed || 25;
-        const delay = Math.max(0, (flow.currentTravelTime || 0) - (flow.freeFlowTravelTime || 0));
-        const delayMins = Math.round(delay / 60);
+        const realDelay = Math.max(0, (flow.currentTravelTime || 0) - (flow.freeFlowTravelTime || 0));
+        const realDelayMins = Math.round(realDelay / 60);
+
+        const effectiveDelayMins = (state.simulatedTrafficDelay !== null) 
+          ? state.simulatedTrafficDelay 
+          : realDelayMins;
+
+        state.liveTrafficByCity[cityId] = {
+          delayMins: effectiveDelayMins,
+          realDelayMins,
+          curSpeed: (state.simulatedTrafficDelay !== null) ? Math.min(10, Math.round(freeSpeed * 0.3)) : curSpeed,
+          freeSpeed,
+          corridorName,
+          timestamp: Date.now()
+        };
+
         const delayEl = document.getElementById("trafficDelayVal");
         if (delayEl) {
-          delayEl.textContent = `+${delayMins} min delay (Speed: ${curSpeed} km/h vs Free-flow: ${freeSpeed} km/h)`;
+          const displaySpeed = state.liveTrafficByCity[cityId].curSpeed;
+          const statusTxt = effectiveDelayMins > 10 ? '🚨 SEVERE BOTTLENECK' : (effectiveDelayMins >= 5 ? '⚠️ SLOW' : 'Normal Flow');
+          delayEl.innerHTML = `<strong style="color:${effectiveDelayMins > 10 ? '#EF4444' : '#10B981'};">+${effectiveDelayMins} min</strong> delay (${statusTxt} • ${displaySpeed} km/h vs Free-flow: ${freeSpeed} km/h)`;
         }
+
+        refreshAll();
       }
     }
   } catch (err) {
     console.log("TomTom live telemetry note:", err);
+  }
+}
+
+// Fetch live atmospheric conditions from Open-Meteo API (Free, CORS-open, No-Key)
+async function fetchOpenMeteoLiveWeather(cityId, customCoords) {
+  try {
+    let lat = 24.5854;
+    let lon = 73.685;
+    if (customCoords && Array.isArray(customCoords)) {
+      lat = customCoords[0];
+      lon = customCoords[1];
+    } else {
+      const city = INDIA_CITIES.find(c => c.id === cityId) || INDIA_CITIES[0];
+      if (city.center) {
+        lat = city.center[0];
+        lon = city.center[1];
+      }
+    }
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&timezone=auto`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      const cur = data.current || {};
+      const temp = Math.round(cur.temperature_2m !== undefined ? cur.temperature_2m : 26);
+      const precip = cur.precipitation || 0;
+      const code = cur.weather_code || 0;
+
+      const isRain = precip > 1.0 || [51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
+      const isHeat = temp >= 38;
+      let weatherType = "clear";
+      let summaryText = `${temp}°C Pleasant`;
+      if (isRain) {
+        weatherType = "rain";
+        summaryText = `${precip}mm Rain`;
+      } else if (isHeat) {
+        weatherType = "heat";
+        summaryText = `${temp}°C Heatwave`;
+      }
+
+      state.liveWeatherByCity[cityId] = {
+        temp,
+        precip,
+        code,
+        weatherType,
+        summaryText,
+        humidity: cur.relative_humidity_2m || 50,
+        timestamp: Date.now()
+      };
+
+      if (state.weatherAutoMode) {
+        state.weather = weatherType;
+        const autoBtn = document.getElementById("btnWeatherAuto");
+        if (autoBtn) {
+          autoBtn.textContent = `🌐 Auto (${summaryText})`;
+        }
+      }
+
+      const badge = document.getElementById("liveWeatherAutoBadge");
+      if (badge) {
+        badge.innerHTML = `🟢 Open-Meteo: <strong>${summaryText}</strong>`;
+      }
+
+      refreshAll();
+    }
+  } catch (err) {
+    console.warn("Open-Meteo live telemetry note:", err);
   }
 }
 
@@ -215,6 +339,7 @@ function selectCity(cityId) {
 
   // Fetch telemetry for this city
   fetchTomTomLiveTraffic(cityId);
+  fetchOpenMeteoLiveWeather(cityId);
 
   // If currently selected destination is not in this city, switch selection
   const matching = ALL_DESTINATIONS.filter(d => cityId === "all" || d.cityId === cityId);
@@ -235,19 +360,22 @@ function selectCity(cityId) {
 
 // ==========================================================================
 // 3. MATHEMATICAL CROWD PREDICTION ENGINE
-// Formula: CrowdScore(d, t) = 0.40*Chist + 0.30*Scal + 0.20*Eevent + 0.10*Wweather
+// ==========================================================================
+// 3. REAL-TIME MULTI-MODAL MATHEMATICAL CROWD PREDICTION ENGINE
+// Formula: CrowdScore(d, t) = [0.35*Chist + 0.25*Scal + 0.15*Eevent + 0.10*Wweather] + Spike(TomTomDelay)
+// Rule: If road delay > 10 min ⟹ Crowd Score automatically spikes +25%!
 // ==========================================================================
 function computeCrowdScore(dest) {
-  // A. Historical Baseline (40%)
+  // A. Historical Baseline (35%)
   const hourKey = state.currentHour;
-  const histVal = dest.hourlyBaseline[hourKey] || 40;
+  const histVal = (dest.hourlyBaseline && dest.hourlyBaseline[hourKey]) ? dest.hourlyBaseline[hourKey] : 40;
 
-  // B. Calendar Signal (30%)
+  // B. Calendar Signal (25%)
   let calVal = 20; // default weekday
   if (state.dayType === "weekend") calVal = 70;
   if (state.dayType === "holiday") calVal = 95;
 
-  // C. Events / Peak Proxy (20%)
+  // C. Events / Temporal Activity Proxy (15%)
   let eventVal = 25;
   if (dest.primaryIntent === "sunset_waterfront" && (hourKey === "17:00" || hourKey === "18:00")) {
     eventVal = 85; // Evening Aarti, sunset boat surges
@@ -255,30 +383,66 @@ function computeCrowdScore(dest) {
     eventVal = 80; // Aarti / Darshan peak
   }
 
-  // D. Weather Penalty/Modifier (10%)
+  // D. Live Weather Telemetry (10%)
   let weatherVal = 50; // normal
-  if (state.weather === "heat") {
+  const weatherMap = state.liveWeatherByCity || {};
+  const activeWeather = (dest && (weatherMap[dest.id] || (dest.cityId && weatherMap[dest.cityId])))
+    ? (weatherMap[dest.id] || weatherMap[dest.cityId])
+    : (weatherMap[state.currentCityId] || weatherMap["all"] || null);
+  const curWeatherType = (state.weatherAutoMode && activeWeather) ? activeWeather.weatherType : state.weather;
+
+  if (curWeatherType === "heat") {
     // Extreme heat suppresses outdoor walking; shifts visitors indoors
     weatherVal = (dest.category === "Historical" || dest.category === "Others") ? 75 : 20;
-  } else if (state.weather === "rain") {
+  } else if (curWeatherType === "rain") {
     // Rain halts outdoor boating / beaches; spikes indoor museum galleries
     weatherVal = (dest.category === "Lakes" || dest.category === "Beaches" || dest.category === "Nature") ? 10 : 80;
   }
 
-  // Linear Normalized Combination
-  let score = Math.round(
-    (0.40 * histVal) +
-    (0.30 * calVal) +
-    (0.20 * eventVal) +
+  // Base Normalized Score (85% baseline weights)
+  let baseScore = Math.round(
+    (0.35 * histVal) +
+    (0.25 * calVal) +
+    (0.15 * eventVal) +
     (0.10 * weatherVal)
   );
 
-  // Check if citizen report exists (overrides with recent decay)
-  let provenance = "PREDICTED";
+  // E. Real-Time TomTom Road Traffic Flow Telemetry (Direct empirical surge)
+  const trafficMap = state.liveTrafficByCity || {};
+  const trafficData = (dest && (trafficMap[dest.id] || (dest.cityId && trafficMap[dest.cityId])))
+    ? (trafficMap[dest.id] || trafficMap[dest.cityId])
+    : (trafficMap[state.currentCityId] || trafficMap["all"] || null);
+  let delayMins = 0;
+  if (state.simulatedTrafficDelay !== null) {
+    delayMins = state.simulatedTrafficDelay;
+  } else if (trafficData) {
+    delayMins = trafficData.delayMins || 0;
+  }
+
+  // USER DIRECTIVE:
+  // "Agar road delay > 10 min ⟹ Crowd Score automatically +25% spike ho jaye!
+  //  Is se map par jaise hi road red hogi, monument ka card automatically High Bottleneck me convert ho jayega!"
+  let trafficSpike = 0;
+  let trafficStateText = "Free Flow";
+  if (delayMins > 10) {
+    trafficSpike = 25; // Direct +25% surge!
+    trafficStateText = `Congestion (+${delayMins}m)`;
+  } else if (delayMins >= 5) {
+    trafficSpike = 12;
+    trafficStateText = `Moderate (+${delayMins}m)`;
+  } else if (delayMins > 0) {
+    trafficSpike = Math.min(8, delayMins * 2);
+    trafficStateText = `Minor (+${delayMins}m)`;
+  }
+
+  let score = baseScore + trafficSpike;
+
+  // F. Check if citizen report exists (overrides with recent decay)
+  let provenance = "LIVE_TELEMETRY";
   if (state.userReports[dest.id]) {
     const rep = state.userReports[dest.id];
     score = rep.rating === 3 ? 90 : rep.rating === 2 ? 55 : 20;
-    provenance = "RECENT";
+    provenance = "CITIZEN_REPORT";
   }
 
   // Clamp 5-98
@@ -288,7 +452,24 @@ function computeCrowdScore(dest) {
   if (score >= 65) level = "High";
   else if (score >= 35) level = "Moderate";
 
-  return { score, level, provenance, histVal, calVal, weatherVal };
+  const weatherSummary = activeWeather ? activeWeather.summaryText : (curWeatherType === 'rain' ? 'Rain' : (curWeatherType === 'heat' ? 'Heatwave' : 'Clear 24°C'));
+
+  return {
+    score,
+    level,
+    provenance,
+    baseScore,
+    histVal,
+    calVal,
+    eventVal,
+    weatherVal,
+    curWeatherType,
+    weatherSummary,
+    delayMins,
+    trafficSpike,
+    trafficStateText,
+    isTrafficBottleneck: delayMins > 10
+  };
 }
 
 function getCrowdColor(level) {
@@ -338,10 +519,40 @@ function renderExplorer() {
     countBadge.innerHTML = `<span>Showing <strong>${filtered.length}</strong> destination${filtered.length === 1 ? '' : 's'} ${scopeTxt}</span>`;
   }
 
+  // If no match found in catalog, prompt live Pan-India discovery
+  if (filtered.length === 0) {
+    featuredContainer.style.display = "none";
+    visualGrid.innerHTML = `
+      <div class="empty-search-state dynamic-discovery-prompt" style="grid-column: 1 / -1; text-align:center; padding:44px 24px; border-radius:22px;">
+        <div style="font-size:2.6rem; margin-bottom:12px;">✨</div>
+        <h4 style="color:#FFF; font-size:1.35rem; margin-bottom:8px;">"${state.searchQuery || 'Destination'}" is not in initial catalog</h4>
+        <p style="color:#A2B8AD; font-size:0.92rem; max-width:540px; margin:0 auto 24px; line-height:1.6;">
+          Our Real-Time Intelligence Engine can discover any tourist monument across Pan-India, fetch encyclopedic coordinates &amp; live photography, and generate a dynamic crowd prediction card instantly!
+        </p>
+        <button class="btn-pill btn-pill-lime" id="btnDynamicDiscover" style="padding:12px 28px; font-size:0.95rem; font-weight:700; cursor:pointer;">
+          ⚡ Discover &amp; Generate Pan-India Card
+        </button>
+      </div>
+    `;
+
+    const btn = visualGrid.querySelector("#btnDynamicDiscover");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        btn.innerHTML = '⏳ Querying Coordinates & Live Imagery...';
+        btn.style.opacity = '0.7';
+        btn.disabled = true;
+        triggerDynamicPanIndiaDiscovery(state.searchQuery);
+      });
+    }
+    return;
+  }
+
+  featuredContainer.style.display = "block";
+
   // 1. Featured Card Selection: prefer currently selected if matching, or first match
   let feat = filtered.find(d => d.id === state.selectedPlaceId);
   if (!feat) {
-    feat = filtered.length > 0 ? filtered[0] : ALL_DESTINATIONS.find(d => d.id === state.selectedPlaceId) || ALL_DESTINATIONS[0];
+    feat = filtered[0];
   }
 
   const featCrowd = computeCrowdScore(feat);
@@ -351,7 +562,7 @@ function renderExplorer() {
   featuredContainer.innerHTML = `
     <div class="featured-place-card" id="card-${feat.id}">
       <div class="featured-image-box">
-        <img class="featured-img" src="${feat.image}" alt="${feat.name}" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
+        <img class="featured-img" data-place-id="${feat.id}" src="${getPlaceholderSvg()}" alt="${feat.name}" decoding="async" referrerpolicy="no-referrer">
         <div class="featured-gradient-scrim"></div>
         <div class="badge-popular-choice">
           👑 ${feat.popularChoice ? 'Popular Choice' : 'Featured Highlight'} &bull; ${feat.cityName}
@@ -408,6 +619,26 @@ function renderExplorer() {
           </div>
         </div>
 
+        <!-- Real-Time Telemetry Breakdown Strip -->
+        <div class="featured-telemetry-breakdown" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:10px 0; padding:10px 14px; background:rgba(0,0,0,0.25); border-radius:10px; border:1px solid rgba(255,255,255,0.08); font-size:0.78rem;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>🚦</span>
+            <span style="color:#A2B6AC;">TomTom Road Delay:</span>
+            <strong style="color:${featCrowd.delayMins > 10 ? '#EF4444' : '#10B981'};">+${featCrowd.delayMins}m (${featCrowd.trafficStateText})</strong>
+            ${featCrowd.trafficSpike > 0 ? `<span style="background:rgba(239,68,68,0.25); color:#EF4444; border:1px solid #EF4444; padding:1px 6px; border-radius:8px; font-size:0.7rem; font-weight:700;">+${featCrowd.trafficSpike}% Road Surge</span>` : ''}
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>🌤️</span>
+            <span style="color:#A2B6AC;">Open-Meteo:</span>
+            <strong style="color:#9FE859;">${featCrowd.weatherSummary}</strong>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>🏛️</span>
+            <span style="color:#A2B6AC;">Historical Footfall:</span>
+            <strong style="color:#FFF;">${featCrowd.histVal}% at ${state.currentHour}</strong>
+          </div>
+        </div>
+
         <div class="featured-meta-bar">
           <span class="meta-item">🏛️ Capacity: <strong>${feat.capacityCeiling.toLocaleString()}</strong></span>
           <span class="meta-item star-rating">⭐ Rating: <strong>${feat.rating || 4.7} ★</strong></span>
@@ -417,16 +648,20 @@ function renderExplorer() {
     </div>
   `;
 
-  // 2. Secondary Grid: Render remaining places
-  visualGrid.innerHTML = "";
-  const remaining = filtered.filter(d => d.id !== feat.id);
+  const featImgEl = featuredContainer.querySelector(".featured-img");
+  if (featImgEl) {
+    loadLiveImageForElement(featImgEl, feat.id);
+  }
 
-  if (remaining.length === 0 && filtered.length === 0) {
+  // 2. Secondary Grid: Render remaining places
+  const remaining = filtered.filter(d => d.id !== feat.id);
+  initCardImageObserver();
+  visualGrid.innerHTML = "";
+
+  if (remaining.length === 0 && filtered.length === 1) {
     visualGrid.innerHTML = `
-      <div class="empty-search-state" style="grid-column: 1 / -1; text-align:center; padding:48px 20px;">
-        <div style="font-size:2.4rem; margin-bottom:10px;">🔍</div>
-        <h4 style="color:#FFF; font-size:1.15rem; margin-bottom:6px;">No destinations found</h4>
-        <p style="color:#A2B8AD; font-size:0.85rem;">No places match your search query or filter in this region. Try switching to "All India" or clearing search.</p>
+      <div style="grid-column: 1 / -1; text-align:center; padding:28px 16px; color:#A2B6AC; font-size:0.88rem;">
+        <span>🎯 Showing <strong>${feat.name}</strong> as featured destination above.</span>
       </div>
     `;
     return;
@@ -436,12 +671,13 @@ function renderExplorer() {
     const crowd = computeCrowdScore(dest);
     const isFav = state.favorites.has(dest.id);
     const card = document.createElement("div");
-    card.className = "visual-place-card";
+    card.className = `visual-place-card ${dest.isDynamicDiscovery ? 'dynamic-discovery-card' : ''}`;
     card.id = `card-${dest.id}`;
     card.title = `Click to inspect ${dest.name} on map`;
     card.innerHTML = `
-      <img class="card-bg-img" src="${dest.image}" alt="${dest.name}" loading="lazy" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
+      <img class="card-bg-img" data-place-id="${dest.id}" src="${getPlaceholderSvg()}" alt="${dest.name}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
       <div class="card-vignette-overlay"></div>
+      ${dest.isDynamicDiscovery ? '<div class="dynamic-sparkle-badge">✨ Live Discovery</div>' : ''}
       
       <button class="card-heart-btn ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${dest.id}', event)" title="Toggle Favorite">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? '#EF4444' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -467,6 +703,11 @@ function renderExplorer() {
     });
 
     visualGrid.appendChild(card);
+
+    const cardImg = card.querySelector(".card-bg-img");
+    if (cardImg && cardImageObserver) {
+      cardImageObserver.observe(cardImg);
+    }
   });
 }
 
@@ -548,6 +789,16 @@ function initControls() {
       state.searchQuery = e.target.value.trim().toLowerCase();
       if (clearBtn) clearBtn.style.display = state.searchQuery ? "block" : "none";
       renderExplorer();
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const rawQ = searchInput.value.trim();
+        if (rawQ) {
+          triggerDynamicPanIndiaDiscovery(rawQ);
+        }
+      }
     });
   }
   if (clearBtn) {
@@ -715,7 +966,7 @@ function renderItinerary() {
     card.innerHTML = `
       <div class="step-time">${stop.time} &bull; STOP ${stop.stopIndex}</div>
       <div style="display:flex; align-items:center; gap:10px; margin:6px 0 8px;">
-        <img src="images/${stop.placeId}.jpg" alt="${name}" style="width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.15); flex-shrink:0;" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
+        <img src="${getPlaceholderSvg()}" data-place-id="${stop.placeId}" alt="${name}" decoding="async" style="width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.15); flex-shrink:0;">
         <div class="step-name" style="margin:0; font-size:1.05rem;">${name}</div>
       </div>
       <p style="font-size:0.75rem; color:#A2B6AC; margin-bottom:8px;">${desc}</p>
@@ -727,6 +978,10 @@ function renderItinerary() {
       </div>
     `;
     grid.appendChild(card);
+    const stepImg = card.querySelector("img[data-place-id]");
+    if (stepImg) {
+      loadLiveImageForElement(stepImg, stop.placeId);
+    }
   });
 
   // Diff Box handling
@@ -802,7 +1057,7 @@ function openAlternativeModal(placeId) {
     item.style.cssText = "background:#FAF7F0; border:1px solid #EBE6DA; border-radius:16px; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;";
     item.innerHTML = `
       <div style="display:flex; align-items:center; gap:14px;">
-        <img src="${cand.image}" alt="${cand.name}" style="width:58px; height:58px; border-radius:12px; object-fit:cover; border:1px solid #E2DCCE; flex-shrink:0;" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
+        <img src="${getPlaceholderSvg()}" data-place-id="${cand.id}" alt="${cand.name}" decoding="async" style="width:58px; height:58px; border-radius:12px; object-fit:cover; border:1px solid #E2DCCE; flex-shrink:0;">
         <div>
           <div style="display:flex; align-items:center; gap:8px;">
             <strong style="font-size:1.05rem; font-family:'Fraunces', serif;">${cand.name}</strong>
@@ -820,6 +1075,10 @@ function openAlternativeModal(placeId) {
       </button>
     `;
     listContainer.appendChild(item);
+    const candImg = item.querySelector("img[data-place-id]");
+    if (candImg) {
+      loadLiveImageForElement(candImg, cand.id);
+    }
   });
 
   // Time-Shift Recommendation
@@ -1031,3 +1290,521 @@ function updateRerouteAssistant() {
     `;
   }
 }
+
+// ==========================================================================
+// 10. ULTRA-SMOOTH HORIZONTAL MOUSE WHEEL SCROLLING
+// ==========================================================================
+function initHorizontalWheelScroll() {
+  const horizontalSelectors = [
+    ".city-chips-scroll",
+    ".category-pills-row",
+    "#circuitSwitcherRow"
+  ];
+
+  horizontalSelectors.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    el.addEventListener("wheel", (e) => {
+      // When scrolling predominantly vertically without Shift, scroll horizontally
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  });
+}
+
+// ==========================================================================
+// 11. DYNAMIC JIT LIVE IMAGE PIPELINE (WIKIPEDIA REST API + UNSPLASH FALLBACK)
+// Pure in-memory session cache ("fetch & go" until page refresh; no DB/disk storage)
+// ==========================================================================
+
+const DEST_IMAGE_METADATA = {
+  // --- Udaipur Hotspots (25 Places) ---
+  "UDR_001": { title: "City_Palace,_Udaipur", query: "City Palace Udaipur architecture" },
+  "UDR_002": { title: "Lake_Pichola", query: "Lake Pichola Udaipur sunset lake" },
+  "UDR_003": { title: "Jagdish_Temple", query: "Jagdish Temple Udaipur hindu temple" },
+  "UDR_004": { title: "Bagore-ki-Haveli", query: "Bagore ki Haveli Udaipur courtyard" },
+  "UDR_005": { title: "Gangaur_Ghat", query: "Gangaur Ghat Udaipur waterfront" },
+  "UDR_006": { title: "Ambrai_Ghat", query: "Ambrai Ghat Udaipur dusk view" },
+  "UDR_007": { title: "Fateh_Sagar_Lake", query: "Fateh Sagar Lake Udaipur water" },
+  "UDR_008": { title: "Saheliyon-ki-Bari", query: "Saheliyon ki Bari Udaipur garden fountains" },
+  "UDR_009": { title: "Monsoon_Palace", query: "Monsoon Palace Sajjangarh hill palace Udaipur" },
+  "UDR_010": { title: "Sajjangarh_Biological_Park", query: "Sajjangarh Biological Park safari wildlife" },
+  "UDR_011": { title: "Doodh_Talai_Lake", query: "Doodh Talai Lake garden Udaipur" },
+  "UDR_012": { title: "Manikya_Lal_Verma", query: "Dudh Talai Garden Udaipur sunset point" },
+  "UDR_013": { title: "Karni_Mata,_Udaipur", query: "Karni Mata Temple ropeway Udaipur" },
+  "UDR_014": { title: "Moti_Magri", query: "Moti Magri Maharana Pratap statue Udaipur" },
+  "UDR_015": { title: "Gulab_Bagh_and_Zoo", query: "Gulab Bagh Udaipur royal gardens rose" },
+  "UDR_016": { title: "Shilpgram,_Udaipur", query: "Shilpgram rural arts crafts complex Udaipur" },
+  "UDR_017": { title: "Under_the_Sun_Aquarium", query: "aquarium fish marine" },
+  "UDR_018": { title: "Lake_Badi", query: "Badi Lake Bahubali hills Udaipur nature" },
+  "UDR_019": { title: "Udai_Sagar_Lake", query: "Udaisagar Lake dam Mewar Udaipur" },
+  "UDR_020": { title: "Ahar_Cenotaphs", query: "Ahar Cenotaphs royal chhatris Udaipur" },
+  "UDR_021": { title: "Jag_Mandir", query: "Jag Mandir Island Palace Udaipur Lake Pichola" },
+  "UDR_022": { title: "Dhebar_Lake", query: "Jaisamand Lake marble chhatris island Udaipur" },
+  "UDR_023": { title: "Sahastra_Bahu_Temples", query: "Sas Bahu Temple Nagda Udaipur ancient stone carving" },
+  "UDR_024": { title: "Haldighati", query: "Haldighati mountain pass Chetak memorial Mewar" },
+  "UDR_025": { title: "Shrinathji_Temple", query: "Shrinathji Temple Nathdwara Krishna shrine" },
+
+  // --- Pan-India Destinations ---
+  "AGR_001": { title: "Taj_Mahal", query: "Taj Mahal Agra marble monument India" },
+  "AGR_002": { title: "Agra_Fort", query: "Agra Fort red sandstone palace" },
+  "AGR_003": { title: "Fatehpur_Sikri", query: "Fatehpur Sikri Buland Darwaza Mughal" },
+  "DEL_001": { title: "Qutb_Minar", query: "Qutub Minar Delhi historic tower" },
+  "DEL_002": { title: "Red_Fort", query: "Red Fort Delhi Lal Qila Mughal architecture" },
+  "DEL_003": { title: "India_Gate", query: "India Gate New Delhi memorial arch" },
+  "JAI_001": { title: "Amber_Fort", query: "Amer Fort Jaipur hill fortress ramparts" },
+  "JAI_002": { title: "Hawa_Mahal", query: "Hawa Mahal Palace of Winds Jaipur pink" },
+  "JAI_003": { title: "City_Palace,_Jaipur", query: "City Palace Jaipur royal courtyards" },
+  "JAI_004": { title: "Nahargarh_Fort", query: "Nahargarh Fort Jaipur panoramic hill city view" },
+  "JAI_005": { title: "Jal_Mahal", query: "Jal Mahal Water Palace Jaipur Man Sagar Lake" },
+  "VNS_001": { title: "Dashashwamedh_Ghat", query: "Dashashwamedh Ghat Varanasi Ganga Aarti evening" },
+  "VNS_002": { title: "Kashi_Vishwanath_Temple", query: "Kashi Vishwanath Temple Varanasi corridor" },
+  "VNS_003": { title: "Assi_Ghat", query: "Assi Ghat Varanasi morning river Ganges boats" },
+  "VNS_004": { title: "Sarnath", query: "Dhamek Stupa Sarnath Buddhist deer park Varanasi" },
+  "GOA_001": { title: "Baga,_Goa", query: "Baga Beach Goa coastal palm sunset shore" },
+  "GOA_002": { title: "Fort_Aguada", query: "Fort Aguada lighthouse Sinquerim Goa ocean" },
+  "GOA_003": { title: "Basilica_of_Bom_Jesus", query: "Basilica of Bom Jesus Old Goa baroque church" },
+  "GOA_004": { title: "Dudhsagar_Falls", query: "Dudhsagar Waterfalls railway bridge Western Ghats Goa" },
+  "MUM_001": { title: "Gateway_of_India", query: "Gateway of India Mumbai Arabian sea harbor" },
+  "MUM_002": { title: "Marine_Drive,_Mumbai", query: "Marine Drive Queens Necklace Mumbai night coastline" },
+  "MUM_003": { title: "Elephanta_Caves", query: "Elephanta Caves rock cut Trimurti Shiva sculpture Mumbai" },
+  "KER_001": { title: "Alappuzha", query: "Alleppey backwaters Kerala traditional houseboat palm" },
+  "KER_002": { title: "Munnar", query: "Munnar tea plantations rolling hills mist Kerala" },
+  "KER_003": { title: "Fort_Kochi", query: "Chinese fishing nets Fort Kochi coastal sunset Kerala" },
+  "KER_004": { title: "Varkala_Beach", query: "Varkala cliff beach Arabian sea sunset Kerala" },
+  "SOU_001": { title: "Mysore_Palace", query: "Mysore Palace illuminated night grand royal architecture" },
+  "SOU_002": { title: "Meenakshi_Temple", query: "Meenakshi Amman Temple Madurai colorful gopuram" },
+  "SOU_003": { title: "Virupaksha_Temple,_Hampi", query: "Virupaksha Temple Hampi Vijayanagara ruins boulders" },
+  "SOU_004": { title: "Brihadisvara_Temple,_Thanjavur", query: "Brihadeeswarar Temple Thanjavur granite Chola tower" },
+  "HIM_001": { title: "Rohtang_Pass", query: "Rohtang Pass snowy Himalayas mountain road Manali" },
+  "HIM_002": { title: "Solang_Valley", query: "Solang Valley adventure alpine meadow Manali snow" },
+  "HIM_003": { title: "Hidimba_Devi_Temple", query: "Hadimba Temple cedar deodar forest pagoda Manali" }
+};
+
+// Pure in-memory session cache (zero disk/DB writes, automatically resets on page refresh)
+const runtimeSessionImageCache = new Map();
+let cardImageObserver = null;
+
+function getPlaceholderSvg() {
+  return "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 240'%3E%3Crect width='100%25' height='100%25' fill='%230E2218'/%3E%3C/svg%3E";
+}
+
+function initLiveImagePipeline() {
+  // Fetch active Unsplash key from server /api/config
+  fetch('/api/config')
+    .then(res => res.json())
+    .then(cfg => {
+      if (cfg && cfg.unsplashKey) {
+        window.UNSPLASH_ACCESS_KEY = cfg.unsplashKey;
+      }
+    })
+    .catch(() => {});
+}
+
+function initCardImageObserver() {
+  if (typeof IntersectionObserver === "undefined") return;
+  if (cardImageObserver) {
+    cardImageObserver.disconnect();
+  }
+
+  cardImageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const placeId = img.getAttribute("data-place-id");
+        if (placeId) {
+          observer.unobserve(img);
+          loadLiveImageForElement(img, placeId);
+        }
+      }
+    });
+  }, {
+    root: document.querySelector(".explorer-cards-pane"),
+    rootMargin: "100px 0px",
+    threshold: 0.01
+  });
+}
+
+async function loadLiveImageForElement(imgEl, placeId) {
+  if (!imgEl || !placeId) return;
+
+  const meta = DEST_IMAGE_METADATA[placeId] || {};
+  const wikiTitle = meta.title;
+  const unsplashQuery = meta.query || (wikiTitle ? wikiTitle.replace(/_/g, ' ') : placeId);
+
+  // Setup smart onerror fallback to Unsplash if initial src fails
+  imgEl.onerror = () => {
+    imgEl.onerror = null;
+    const unsplashKey = window.UNSPLASH_ACCESS_KEY || "NajbVz2htBZi8vvz88XJ0L7VFj4OAWhzqV1L-EdHJsA";
+    if (unsplashKey && unsplashQuery) {
+      fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(unsplashQuery)}&client_id=${unsplashKey}&orientation=landscape&per_page=1`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.results && d.results.length > 0) {
+            const uUrl = d.results[0].urls.regular || d.results[0].urls.small;
+            runtimeSessionImageCache.set(placeId, uUrl);
+            imgEl.src = uUrl;
+            imgEl.classList.add("image-loaded");
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  // 1. In-memory session cache: return instantly if already fetched in this session
+  if (runtimeSessionImageCache.has(placeId)) {
+    const cachedUrl = runtimeSessionImageCache.get(placeId);
+    imgEl.src = cachedUrl;
+    imgEl.classList.add("image-loaded");
+    return;
+  }
+
+  // 2. Primary: Real-time query to Wikipedia REST API
+  if (wikiTitle) {
+    try {
+      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`;
+      const resp = await fetch(wikiUrl);
+      if (resp.ok) {
+        const data = await resp.json();
+        let liveUrl = null;
+        if (data.thumbnail && data.thumbnail.source) {
+          liveUrl = data.thumbnail.source.replace(/\/\d+px-/, '/800px-');
+        } else if (data.originalimage && data.originalimage.source) {
+          liveUrl = data.originalimage.source;
+        }
+        if (liveUrl) {
+          runtimeSessionImageCache.set(placeId, liveUrl);
+          imgEl.src = liveUrl;
+          imgEl.classList.add("image-loaded");
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Wikipedia Live] 404/Error for ${placeId}:`, e);
+    }
+  }
+
+  // 3. Fallback: Query Unsplash Search API in real-time
+  const unsplashKey = window.UNSPLASH_ACCESS_KEY || "NajbVz2htBZi8vvz88XJ0L7VFj4OAWhzqV1L-EdHJsA";
+  if (unsplashKey && unsplashQuery) {
+    try {
+      const uUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(unsplashQuery)}&client_id=${unsplashKey}&orientation=landscape&per_page=1`;
+      const uResp = await fetch(uUrl);
+      if (uResp.ok) {
+        const uData = await uResp.json();
+        if (uData.results && uData.results.length > 0) {
+          const liveUrl = uData.results[0].urls.regular || uData.results[0].urls.small;
+          runtimeSessionImageCache.set(placeId, liveUrl);
+          imgEl.src = liveUrl;
+          imgEl.classList.add("image-loaded");
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Unsplash Live] Fallback failed for ${placeId}:`, e);
+    }
+  }
+
+  // 4. Safe offline fallback if both external networks fail
+  const destObj = (typeof ALL_DESTINATIONS !== "undefined") ? ALL_DESTINATIONS.find(d => d.id === placeId) : null;
+  imgEl.src = (destObj && destObj.image) ? destObj.image : (destObj?.isDynamicDiscovery ? 'images/AGR_001.jpg' : `images/${placeId}.jpg`);
+  imgEl.classList.add("image-loaded");
+}
+
+// ==========================================================================
+// 12. REAL-TIME PAN-INDIA ON-THE-FLY PLACE DISCOVERY & CARD GENERATOR
+// ==========================================================================
+
+const KNOWN_INDIAN_CITIES = [
+  "Hyderabad", "Amritsar", "Delhi", "New Delhi", "Mumbai", "Kolkata", "Bengaluru", "Bangalore",
+  "Chennai", "Varanasi", "Agra", "Jaipur", "Udaipur", "Goa", "Kochi", "Cochin", "Madurai", "Mysore",
+  "Hampi", "Bhopal", "Bhubaneswar", "Puri", "Konark", "Gwalior", "Khajuraho", "Shimla", "Manali",
+  "Dharamshala", "Rishikesh", "Haridwar", "Pune", "Aurangabad", "Ahmedabad", "Surat", "Vadodara",
+  "Jodhpur", "Jaisalmer", "Bikaner", "Mount Abu", "Pushkar", "Ajmer", "Chittorgarh", "Kumbhalgarh",
+  "Ranthambore", "Guwahati", "Shillong", "Kaziranga", "Darjeeling", "Gangtok", "Pondicherry", "Puducherry",
+  "Ooty", "Kodaikanal", "Munnar", "Alleppey", "Varkala", "Trivandrum", "Coimbatore", "Thanjavur", "Lucknow",
+  "Patna", "Gaya", "Bodh Gaya", "Sanchi", "Mandu", "Alwar", "Bharatpur", "Nainital", "Mussoorie", "Leh", "Ladakh"
+];
+
+function showDiscoveryToast(htmlContent) {
+  let toast = document.getElementById("discoveryToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "discoveryToast";
+    toast.className = "discovery-toast";
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = htmlContent;
+  toast.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 4500);
+}
+
+function inferCategoryFromText(text) {
+  const t = (text || "").toLowerCase();
+  if (/temple|mandir|gurdwara|shrine|mosque|masjid|church|cathedral|basilica|dargah|stupa|monastery/.test(t)) {
+    return "Temples";
+  }
+  if (/lake|river|waterfall|falls|ghat|dam|reservoir|backwater/.test(t)) {
+    return "Lakes";
+  }
+  if (/beach|coast|cove|sea|ocean|island/.test(t)) {
+    return "Beaches";
+  }
+  if (/park|sanctuary|wildlife|zoo|garden|forest|valley|hills|mountain|pass|peak|flora/.test(t)) {
+    return "Nature";
+  }
+  return "Historical";
+}
+
+function generateDynamicHourlyBaseline(category) {
+  if (category === "Temples") {
+    return {
+      "06:00": 35, "07:00": 60, "08:00": 78, "09:00": 85, "10:00": 80,
+      "11:00": 65, "12:00": 50, "15:00": 45, "16:00": 65, "17:00": 82, "18:00": 92, "19:00": 85, "20:00": 60
+    };
+  } else if (category === "Lakes" || category === "Beaches" || category === "Nature") {
+    return {
+      "08:00": 10, "09:00": 22, "10:00": 38, "11:00": 45, "12:00": 40,
+      "14:00": 42, "15:00": 58, "16:00": 78, "17:00": 92, "18:00": 88, "19:00": 62, "20:00": 30
+    };
+  } else {
+    return {
+      "08:00": 12, "09:00": 30, "10:00": 60, "11:00": 82, "12:00": 90,
+      "13:00": 86, "14:00": 78, "15:00": 70, "16:00": 55, "17:00": 36, "18:00": 16
+    };
+  }
+}
+
+async function triggerDynamicPanIndiaDiscovery(query) {
+  const cleanQ = (query || "").trim();
+  if (!cleanQ) {
+    showDiscoveryToast("⚠️ Please enter a destination or monument name to search.");
+    return;
+  }
+
+  // 1. Check if place already exists in local catalog
+  const existing = ALL_DESTINATIONS.find(d => 
+    d.name.toLowerCase() === cleanQ.toLowerCase() ||
+    d.name.toLowerCase().includes(cleanQ.toLowerCase())
+  );
+
+  if (existing) {
+    state.selectedPlaceId = existing.id;
+    state.currentCityId = existing.cityId || "all";
+    state.searchQuery = "";
+    const searchInput = document.getElementById("placeSearchInput");
+    if (searchInput) searchInput.value = "";
+    document.querySelectorAll(".city-chip").forEach(c => c.classList.remove("active"));
+    document.querySelector(`.city-chip[data-city="${state.currentCityId}"]`)?.classList.add("active");
+    if (map && existing.coords) {
+      map.flyTo(existing.coords, 14, { duration: 1.4 });
+      if (mapMarkers[existing.id]) mapMarkers[existing.id].openPopup();
+    }
+    renderExplorer();
+    showDiscoveryToast(`📍 Found <strong>${existing.name}</strong> in catalog!`);
+    return;
+  }
+
+  // 2. Not in local catalog: trigger live Pan-India discovery
+  showDiscoveryToast(`✨ Searching Pan-India Index for <strong>"${cleanQ}"</strong>...`);
+
+  try {
+    // Step A: Query Wikipedia Search API
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ + " India")}&format=json&origin=*`;
+    const searchResp = await fetch(searchUrl);
+    if (!searchResp.ok) throw new Error("Search API unreachable");
+    const searchData = await searchResp.json();
+    const results = searchData?.query?.search || [];
+
+    if (results.length === 0) {
+      showDiscoveryToast(`⚠️ Could not locate "${cleanQ}" on Pan-India monuments index. Try a specific name (e.g. Charminar, Golden Temple).`);
+      return;
+    }
+
+    const topTitle = results[0].title;
+
+    // Step B: Query Wikipedia Summary REST API
+    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`;
+    const summaryResp = await fetch(summaryUrl);
+    if (!summaryResp.ok) throw new Error("Summary API unreachable");
+    const summaryData = await summaryResp.json();
+
+    // Step C: Resolve Coordinates
+    let coords = null;
+    if (summaryData.coordinates && summaryData.coordinates.lat && summaryData.coordinates.lon) {
+      coords = [summaryData.coordinates.lat, summaryData.coordinates.lon];
+    } else {
+      // Query Wikipedia Coordinates API as fallback
+      try {
+        const coordUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=coordinates&titles=${encodeURIComponent(topTitle)}&format=json&origin=*`;
+        const cResp = await fetch(coordUrl);
+        const cData = await cResp.json();
+        const pages = cData?.query?.pages || {};
+        for (const p in pages) {
+          if (pages[p].coordinates && pages[p].coordinates.length > 0) {
+            coords = [pages[p].coordinates[0].lat, pages[p].coordinates[0].lon];
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!coords) {
+      coords = [22.8, 79.2]; // Pan-India geographic center fallback
+    }
+
+    // Step D: Live Image Resolution (Wikipedia primary -> Unsplash fallback)
+    let liveImgUrl = null;
+    if (summaryData.thumbnail && summaryData.thumbnail.source) {
+      liveImgUrl = summaryData.thumbnail.source.replace(/\/\d+px-/, '/800px-');
+    } else if (summaryData.originalimage && summaryData.originalimage.source) {
+      liveImgUrl = summaryData.originalimage.source;
+    }
+
+    // Fallback to Unsplash API if Wikipedia has no image
+    if (!liveImgUrl && window.UNSPLASH_ACCESS_KEY) {
+      try {
+        const uUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(topTitle + " India")}&client_id=${window.UNSPLASH_ACCESS_KEY}&orientation=landscape&per_page=1`;
+        const uResp = await fetch(uUrl);
+        if (uResp.ok) {
+          const uData = await uResp.json();
+          if (uData.results && uData.results.length > 0) {
+            liveImgUrl = uData.results[0].urls.regular || uData.results[0].urls.small;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Step E: Infer City & Category
+    const fullText = `${summaryData.title} ${summaryData.description || ""} ${summaryData.extract || ""}`;
+    let inferredCity = "Pan-India";
+    for (const city of KNOWN_INDIAN_CITIES) {
+      const reg = new RegExp(`\\b${city}\\b`, "i");
+      if (reg.test(fullText)) {
+        inferredCity = city;
+        break;
+      }
+    }
+
+    const inferredCat = inferCategoryFromText(fullText);
+
+    // Step F: Build Dynamic Destination Object
+    const dynId = `IND_${Date.now()}`;
+    const newDest = {
+      id: dynId,
+      cityId: dynId,
+      name: summaryData.title,
+      cityName: inferredCity,
+      state: "India",
+      displayLocation: summaryData.description || `${summaryData.title}, ${inferredCity}`,
+      category: inferredCat,
+      experienceTags: ["pan_india_discovery", "real_time_telemetry", "heritage"],
+      tags: ["Pan-India", inferredCat, inferredCity],
+      primaryIntent: inferredCat.toLowerCase(),
+      coords: coords,
+      openingHours: { open: "08:00", close: "18:30", lastEntry: "17:30" },
+      avgVisitDurationMin: 120,
+      ticketPriceInr: 250,
+      capacityCeiling: 3500,
+      rating: 4.8,
+      popularChoice: true,
+      bestVisitTime: "08 AM – 11 AM",
+      bestVisitTimeNote: "(Off-Peak Window)",
+      recommendedDays: "Tue – Thu",
+      recommendedDaysNote: "(Lower Crowds)",
+      fragilityIndex: 0.35,
+      accessibility: { wheelchair: "Yes", stairs: "Moderate" },
+      image: liveImgUrl || 'images/AGR_001.jpg',
+      wikiTitle: topTitle,
+      description: summaryData.extract || `Real-time generated intelligence card for ${summaryData.title}.`,
+      hourlyBaseline: generateDynamicHourlyBaseline(inferredCat),
+      isDynamicDiscovery: true
+    };
+
+    // Step G: Register in runtime memory cache
+    DEST_IMAGE_METADATA[dynId] = { title: topTitle, query: `${topTitle} India` };
+    if (liveImgUrl) {
+      runtimeSessionImageCache.set(dynId, liveImgUrl);
+    }
+
+    // Prepend to catalog so it appears at the top
+    ALL_DESTINATIONS.unshift(newDest);
+    fetchTomTomLiveTraffic(dynId, newDest.coords);
+    fetchOpenMeteoLiveWeather(dynId, newDest.coords);
+
+    // Step H: Add pin to Leaflet map
+    if (map) {
+      const pin = L.marker(newDest.coords, {
+        icon: L.divIcon({
+          className: 'custom-map-pin dynamic-pin',
+          html: `
+            <div class="pulse-ring pulse-lime"></div>
+            <div class="pin-marker-core" style="background:#9FE859; color:#0D2017; font-size:15px; font-weight:bold; display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; border:2px solid #0D2017; box-shadow:0 0 14px rgba(159,232,89,0.7);">
+              ✨
+            </div>
+          `,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        })
+      });
+
+      const dynCrowd = computeCrowdScore(newDest);
+      const dynColor = getCrowdColor(dynCrowd.level);
+      pin.bindPopup(`
+        <div style="font-family:'Plus Jakarta Sans', sans-serif; padding: 4px; min-width: 180px;">
+          <span style="background:rgba(159,232,89,0.25); color:#227845; font-size:10px; font-weight:700; padding:2px 8px; border-radius:12px;">✨ Live Pan-India Discovery</span>
+          <h4 style="margin:4px 0 2px; font-size:14px; color:#1C241E;">${newDest.name}</h4>
+          <span style="font-size:11px; color:#56635A;">📍 ${newDest.displayLocation}</span>
+          <div style="margin-top:6px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+            <span style="background:${dynColor}; color:white; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:bold;">
+              ${dynCrowd.level} Crowd (${dynCrowd.score}%)
+            </span>
+            <span style="font-size:10px; color:#0284C7; font-weight:700;">★ ${newDest.rating}</span>
+          </div>
+        </div>
+      `);
+      pin.on('click', () => {
+        selectDestination(dynId);
+      });
+      pin.addTo(map);
+      mapMarkers[dynId] = pin;
+    }
+
+    // Step I: Activate selection and switch to All India view
+    state.selectedPlaceId = dynId;
+    state.currentCityId = "all";
+    state.searchQuery = "";
+    const searchInput = document.getElementById("placeSearchInput");
+    if (searchInput) searchInput.value = "";
+    const clearBtn = document.getElementById("clearSearchBtn");
+    if (clearBtn) clearBtn.style.display = "none";
+
+    initCitySelector();
+
+    document.querySelectorAll(".city-chip").forEach(c => c.classList.remove("active"));
+    document.querySelector('.city-chip[data-city="all"]')?.classList.add("active");
+
+    // Fly map smoothly to newly discovered place
+    if (map) {
+      map.flyTo(newDest.coords, 14, { duration: 1.5 });
+      setTimeout(() => {
+        if (mapMarkers[dynId]) mapMarkers[dynId].openPopup();
+      }, 1500);
+    }
+
+    renderExplorer();
+    showDiscoveryToast(`✨ Created live card for <strong>${newDest.name} (${inferredCity})</strong>!`);
+
+  } catch (err) {
+    console.error("Pan-India discovery error:", err);
+    showDiscoveryToast(`⚠️ Could not generate card: ${err.message}. Please check connection.`);
+  }
+}
+
+
+

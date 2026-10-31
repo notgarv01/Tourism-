@@ -9,7 +9,7 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <!-- Custom Stylesheet (Advocado Design System) -->
-  <link rel="stylesheet" href="style.css?v=2.1">
+  <link rel="stylesheet" href="style.css?v=3.2">
 </head>
 <body>
 
@@ -183,7 +183,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="placeSearchInput" placeholder="Search across India (e.g. Taj Mahal, Pichola)..." autocomplete="off">
+            <input type="text" id="placeSearchInput" placeholder="Search any place in India (e.g. Charminar, Golden Temple)... [Enter]" autocomplete="off">
             <button type="button" id="clearSearchBtn" class="search-clear-btn" style="display:none;" title="Clear search">&times;</button>
           </div>
           <button class="filter-toggle-btn" id="btnToggleControls" title="Toggle Crowd Prediction Simulation Parameters">
@@ -245,7 +245,7 @@
         </div>
       </div>
 
-      <!-- Collapsible Live Prediction Simulation Controls -->
+            <!-- Collapsible Live Prediction Simulation Controls -->
       <div class="control-panel explorer-control-panel" id="controlPanelWrapper">
         <!-- 1. Time Slider -->
         <div class="control-group">
@@ -275,13 +275,15 @@
           </div>
         </div>
 
-        <!-- 3. Weather Condition -->
+        <!-- 3. Weather Condition (Open-Meteo Live API Hook) -->
         <div class="control-group">
-          <div class="control-label">
-            <span>Live Weather Proxy</span>
+          <div class="control-label" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+            <span>Weather Telemetry</span>
+            <span id="liveWeatherAutoBadge" style="font-size:0.72rem; color:#9FE859; font-weight:700;">🟢 Open-Meteo Synced</span>
           </div>
           <div class="weather-pills-bar" id="weatherControl">
-            <button class="weather-btn active" data-weather="clear">☀️ Clear 24°C</button>
+            <button class="weather-btn active" data-weather="auto" id="btnWeatherAuto" title="Real-time live atmospheric telemetry from Open-Meteo API">🌐 Auto (Live)</button>
+            <button class="weather-btn" data-weather="clear">☀️ Clear</button>
             <button class="weather-btn" data-weather="heat">🔥 Heatwave 39°C</button>
             <button class="weather-btn" data-weather="rain">🌧️ Monsoon Rain (18mm)</button>
           </div>
@@ -321,9 +323,14 @@
               <span class="category-pill" style="font-size:0.65rem;" id="mapStatusBadge">TOMTOM LIVE API ENGAGED</span>
             </div>
             <!-- Live Traffic Telemetry Ticker -->
-            <div id="trafficFeedBar" class="traffic-ticker-bar">
-              <span>🚦 <strong id="trafficCorridorLabel">Access Corridor:</strong> Live delay <span id="trafficDelayVal">+1 min (Normal Flow • 22 km/h)</span></span>
-              <span style="font-weight:700; color:#10B981;">● TomTom Live Telemetry</span>
+            <div id="trafficFeedBar" class="traffic-ticker-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span>🚦 <strong id="trafficCorridorLabel">Access Corridor:</strong> Live delay <span id="trafficDelayVal">+0 min (Normal Flow • 32 km/h)</span></span>
+                <span style="font-weight:700; color:#10B981;">● TomTom Live Telemetry</span>
+              </div>
+              <button id="btnSimulateTrafficJam" class="btn-pill" style="padding:4px 12px; font-size:0.72rem; background:rgba(239,68,68,0.2); color:#EF4444; border:1px solid #EF4444; cursor:pointer; font-weight:700;" title="Simulate road delay > 10 min to test +25% crowd bottleneck spike">
+                ⚡ Test Rush-Hour (+14m)
+              </button>
             </div>
             <div id="leafletMap"></div>
             <div class="map-footer-hint">
@@ -447,11 +454,7 @@
       <span class="category-pill" style="margin-bottom:8px;">CITIZEN CROWD REPORT FORM</span>
       <h2 style="font-size:1.8rem; margin-bottom:6px;">Report Live Queue</h2>
       <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:20px;">
-<<<<<<< HEAD
-        Contribute to the Udaipur NoRush mesh. Submissions decay with a 30-minute half-life.
-=======
-        Contribute to the Pan-India CrowdWise mesh. Submissions decay with a 30-minute half-life.
->>>>>>> 53208067458d2152691bb7588848172789196097
+        Contribute to the NoRush crowd prediction mesh. Submissions decay with a 30-minute half-life.
       </p>
 
       <div style="margin-bottom:16px;">
@@ -514,6 +517,6 @@
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="data.js?v=2.1"></script>
-  <script src="app.js?v=2.1"></script>
+  <script src="app.js?v=3.2"></script>
 </body>
 </html>

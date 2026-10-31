@@ -13,3 +13,9 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
+# Environment Secrets
+.env
+.env.*
+!.env.example
+
