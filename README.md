@@ -13,7 +13,6 @@
 - **Dynamic In-Trip Itinerary Re-Router (`/api/itineraries/replan`):** Recalculates multi-stop routes in `< 15 seconds` when sudden rainfall, closure, or crowd surges occur across 6 distinct Indian travel circuits.
 - **5-Badge Data Provenance Standard:** Every metric is transparently tagged as `LIVE`, `RECENT`, `HISTORICAL`, `PREDICTED`, or `SIMULATED`.
 - **Waze-Style Citizen Reporting:** 1-tap queue reporting with rate-limiting and a 30-minute exponential decay half-life.
-- **Judge Q&A Playbook:** 12 battle-tested technical and commercial answers addressing national scalability, state tourism board integrations, and algorithmic transparency.
 
 ---
 
@@ -69,7 +68,7 @@ $$\text{UtilityScore}(c) = 0.30 \cdot S_{\text{low\_crowd}} + 0.25 \cdot S_{\tex
 │   ├── index.html       # Advocado-aesthetic UI with Pan-India Leaflet map & city selector
 │   ├── style.css        # Vanilla CSS design system (Fraunces + Plus Jakarta Sans)
 │   ├── app.js           # Pan-India prediction engine, map controller, and replan logic
-│   └── data.js          # 40+ destinations catalog, 6 multi-stop circuits & Judge Playbook
+│   └── data.js          # 40+ destinations catalog & 6 multi-stop circuits
 ├── server.js            # Zero-dependency Node.js HTTP server (port 8080)
 ├── server.py            # Python SimpleHTTP fallback server
 └── README.md            # Project documentation

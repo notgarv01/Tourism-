@@ -245,7 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
   try { renderExplorer(); } catch (e) { console.error("Error in renderExplorer:", e); }
   try { renderItinerary(); } catch (e) { console.error("Error in renderItinerary:", e); }
   try { initModals(); } catch (e) { console.error("Error in initModals:", e); }
-  try { initJudgePlaybook(); } catch (e) { console.error("Error in initJudgePlaybook:", e); }
   try { initRerouteAssistant(); } catch (e) { console.error("Error in initRerouteAssistant:", e); }
   try { initHorizontalWheelScroll(); } catch (e) { console.error("Error in initHorizontalWheelScroll:", e); }
   try { initLiveImagePipeline(); } catch (e) { console.error("Error in initLiveImagePipeline:", e); }
@@ -1351,7 +1350,7 @@ function selectAndClose(placeId) {
 }
 
 // ==========================================================================
-// 8. MODALS SETUP (CITIZEN REPORT & JUDGE PLAYBOOK)
+// 8. MODALS SETUP (CITIZEN REPORT)
 // ==========================================================================
 function initModals() {
   const attachModalEvents = (modalEl, closeBtnId) => {
@@ -1409,9 +1408,6 @@ function initModals() {
   const reportModal = document.getElementById("reportModal");
   attachModalEvents(reportModal, "closeReportModal");
 
-  const judgeModal = document.getElementById("judgeModal");
-  attachModalEvents(judgeModal, "closeJudgeModal");
-
   // Press ESC to close any open modal
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -1466,12 +1462,6 @@ function initModals() {
     alert("Report recorded! Destination provenance badge updated to RECENT (Visitor Verified) with 30-min decay.");
   });
 
-  // Judge Playbook Modal
-  document.getElementById("openJudgeLink").addEventListener("click", (e) => {
-    e.preventDefault();
-    openModal(judgeModal);
-  });
-
   // Mobile Navigation Drawer Toggle & Links
   const navMobileToggle = document.getElementById("navMobileToggle");
   const mobileNavDrawer = document.getElementById("mobileNavDrawer");
@@ -1495,16 +1485,6 @@ function initModals() {
       });
     });
 
-    const openJudgeLinkMobile = document.getElementById("openJudgeLinkMobile");
-    if (openJudgeLinkMobile) {
-      openJudgeLinkMobile.addEventListener("click", (e) => {
-        e.preventDefault();
-        navMobileToggle.classList.remove("open");
-        mobileNavDrawer.classList.remove("open");
-        judgeModal.classList.add("open");
-      });
-    }
-
     const btnReportModalOpenMobile = document.getElementById("btnReportModalOpenMobile");
     if (btnReportModalOpenMobile) {
       btnReportModalOpenMobile.addEventListener("click", () => {
@@ -1526,28 +1506,7 @@ function initModals() {
   }
 }
 
-// ==========================================================================
-// 9. JUDGE PLAYBOOK ACCORDION LOADER
-// ==========================================================================
-function initJudgePlaybook() {
-  const container = document.getElementById("judgeAccordionContainer");
-  if (!container) return;
-  container.innerHTML = "";
 
-  JUDGE_PLAYBOOK.forEach((item, index) => {
-    const box = document.createElement("details");
-    box.style.cssText = "background:#FAF7F0; border:1px solid #EBE6DA; border-radius:14px; padding:12px 18px; cursor:pointer;";
-    box.innerHTML = `
-      <summary style="font-weight:700; font-size:0.9rem; color:#1C241E; outline:none;">
-        ${index + 1}. ${item.q}
-      </summary>
-      <p style="font-size:0.84rem; color:#56635A; margin-top:8px; line-height:1.55; padding-left:14px; border-left:3px solid #9FE859;">
-        ${item.a}
-      </p>
-    `;
-    container.appendChild(box);
-  });
-}
 
 // ==========================================================================
 // 10. REAL-TIME "HEADING TO..." BOTTLENECK REROUTE ASSISTANT

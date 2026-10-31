@@ -114,5 +114,4 @@ After deploying both:
 - [ ] Click on **Taj Mahal** or **Amer Fort** card.
 - [ ] Verify the **"Google Gemini Live Situational Briefing"** card loads and provides AI travel advice.
 - [ ] Click **"Test Rain Re-plan"** to verify the real-time weather disruption rerouting.
-- [ ] Open **"Judge Playbook (12 Q&As)"** from the navbar to verify all technical defenses are intact.
 
