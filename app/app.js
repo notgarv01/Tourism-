@@ -1,3 +1,24 @@
+// ==========================================================================
+// DYNAMIC BACKEND API BASE RESOLUTION (Local + Cloud Vercel/Render Deployments)
+// ==========================================================================
+function getApiBaseUrl() {
+  if (typeof window !== "undefined" && window.BACKEND_API_URL) {
+    return window.BACKEND_API_URL.replace(/\/$/, "");
+  }
+  try {
+    if (typeof window !== "undefined" && window.location) {
+      const p = new URLSearchParams(window.location.search).get("backendUrl");
+      if (p) {
+        localStorage.setItem("norush_backend_url", p);
+        return p.replace(/\/$/, "");
+      }
+      const saved = localStorage.getItem("norush_backend_url");
+      if (saved) return saved.replace(/\/$/, "");
+    }
+  } catch (e) {}
+  return ""; // Default relative endpoint (works with vercel.json rewrites & local server.js)
+}
+
 
 // ==========================================================================
 // PINPOINT ACCURACY ENGINES: CALENDAR, CLOSURES, SEASONALITY & BOTTLENECK ROADS
@@ -1639,7 +1660,7 @@ function getPlaceholderSvg() {
 
 function initLiveImagePipeline() {
   // Fetch active Unsplash key from server /api/config
-  fetch('/api/config')
+  fetch(getApiBaseUrl() + '/api/config')
     .then(res => res.json())
     .then(cfg => {
       if (cfg && cfg.unsplashKey) {
@@ -2217,7 +2238,7 @@ async function fetchGeminiAdvisor(dest, force = false) {
   };
 
   try {
-    const res = await fetch('/api/gemini/advisor', {
+    const res = await fetch(getApiBaseUrl() + '/api/gemini/advisor', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

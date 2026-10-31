@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: norush-tourism-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install --production
+    startCommand: node server.js
+    envVars:
+      - key: UNSPLASH_ACCESS_KEY
+        sync: false
+      - key: BESTTIME_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY_BACKUP
+        sync: false
+

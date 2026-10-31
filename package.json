@@ -1,0 +1,22 @@
+{
+  "name": "norush-tourism-engine",
+  "version": "1.0.0",
+  "description": "NoRush Smart Tourism Intelligence Backend Engine (TomTom Flow, Open-Meteo, Google Gemini AI)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "tourism",
+    "crowd-prediction",
+    "gemini-ai",
+    "tomtom-traffic",
+    "open-meteo"
+  ],
+  "author": "Garv Gupta",
+  "license": "MIT"
+}
+

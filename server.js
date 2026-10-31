@@ -1,24 +1,3 @@
-
-function getGeminiApiKeys() {
-  const envPath = path.join(__dirname, '.env');
-  const keys = [];
-  if (fs.existsSync(envPath)) {
-    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-    lines.forEach(line => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('#')) return;
-      const match = trimmed.match(/^GEMINI_API_KEY(?:_[A-Za-z0-9]+)?=(.+)$/i);
-      if (match) {
-        const keyVal = match[1].trim();
-        if (keyVal && !keyVal.includes('paste_your_') && !keys.includes(keyVal)) {
-          keys.push(keyVal);
-        }
-      }
-    });
-  }
-  return keys;
-}
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -45,27 +24,77 @@ const MIME_TYPES = {
   '.ttf': 'font/ttf'
 };
 
+// Retrieve all available Gemini API keys with support for Cloud Envs & Local .env
+function getGeminiApiKeys() {
+  const keys = [];
+
+  // 1. Check process.env (Render / Cloud deployment)
+  if (process.env.GEMINI_API_KEY) keys.push(process.env.GEMINI_API_KEY.trim());
+  if (process.env.GEMINI_API_KEY_BACKUP) keys.push(process.env.GEMINI_API_KEY_BACKUP.trim());
+  if (process.env.GEMINI_API_KEY_2) keys.push(process.env.GEMINI_API_KEY_2.trim());
+
+  // 2. Check local .env file
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('#')) return;
+      const match = trimmed.match(/^GEMINI_API_KEY(?:_[A-Za-z0-9]+)?=(.+)$/i);
+      if (match) {
+        const keyVal = match[1].trim();
+        if (keyVal && !keyVal.includes('paste_your_') && !keys.includes(keyVal)) {
+          keys.push(keyVal);
+        }
+      }
+    });
+  }
+  return [...new Set(keys)];
+}
+
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(parsedUrl.pathname);
 
-    if (pathname === '/api/config') {
-    let unsplashKey = '';
-    let besttimeKey = '';
-    let geminiKey = '';
+  // Universal CORS Headers for Cross-Origin Deployments (Vercel Frontend -> Render Backend)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle CORS Preflight requests immediately
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  // Health check endpoint for Render / Uptime monitors
+  if (pathname === '/api/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', service: 'NoRush Backend Engine', time: new Date().toISOString() }));
+    return;
+  }
+
+  // Config endpoint: safely supply frontend with client-side keys
+  if (pathname === '/api/config') {
+    let unsplashKey = process.env.UNSPLASH_ACCESS_KEY || '';
+    let besttimeKey = process.env.BESTTIME_API_KEY || '';
+    let geminiKey = process.env.GEMINI_API_KEY || '';
+
     try {
       const envPath = path.join(__dirname, '.env');
       if (fs.existsSync(envPath)) {
         const envContent = fs.readFileSync(envPath, 'utf8');
         const match = envContent.match(/UNSPLASH_ACCESS_KEY=(.+)/);
-        if (match) unsplashKey = match[1].trim();
+        if (match && !unsplashKey) unsplashKey = match[1].trim();
         const matchB = envContent.match(/BESTTIME_API_KEY=(.+)/);
-        if (matchB) besttimeKey = matchB[1].trim();
+        if (matchB && !besttimeKey) besttimeKey = matchB[1].trim();
         const matchG = envContent.match(/GEMINI_API_KEY=(.+)/);
-        if (matchG) geminiKey = matchG[1].trim();
+        if (matchG && !geminiKey) geminiKey = matchG[1].trim();
       }
     } catch (e) {}
-    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ unsplashKey, besttimeKey, geminiKey }));
     return;
   }
@@ -80,8 +109,8 @@ const server = http.createServer((req, res) => {
         const geminiKeys = getGeminiApiKeys();
 
         if (geminiKeys.length === 0) {
-          res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({ error: 'No active GEMINI_API_KEY configured in .env' }));
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'No active GEMINI_API_KEY configured in environment' }));
           return;
         }
 
@@ -119,13 +148,11 @@ Output ONLY valid JSON without markdown fences.`;
 
             // If rate limit (429) or quota exceeded (403), failover to next key!
             if (gRes.status === 429 || gRes.status === 403) {
-              const errTxt = await gRes.text();
               console.warn(`[Gemini Failover] Key #${i + 1} quota/rate limit exhausted (HTTP ${gRes.status}). Failing over to backup key...`);
               continue;
             }
 
             if (!gRes.ok) {
-              const errTxt = await gRes.text();
               console.warn(`[Gemini Failover] Key #${i + 1} HTTP ${gRes.status}. Trying next key...`);
               continue;
             }
@@ -135,7 +162,7 @@ Output ONLY valid JSON without markdown fences.`;
             const parsed = JSON.parse(jsonText);
             parsed.keyUsed = i === 0 ? "PRIMARY" : `BACKUP_${i}`;
 
-            res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(parsed));
             success = true;
             break;
@@ -150,7 +177,7 @@ Output ONLY valid JSON without markdown fences.`;
         }
       } catch (err) {
         console.error('Gemini advisor error (safe fallback applied):', err);
-        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           confidenceScore: 94,
           title: 'Live Multi-Modal Telemetry Assessment',
@@ -164,8 +191,7 @@ Output ONLY valid JSON without markdown fences.`;
     return;
   }
 
-
-
+  // Static File Serving (For local testing or standalone hosting)
   if (pathname === '/' || pathname === '') {
     pathname = '/index.html';
   }
@@ -173,7 +199,6 @@ Output ONLY valid JSON without markdown fences.`;
   // Resolve sanitized safe path within APP_DIR
   const safePath = path.normalize(path.join(APP_DIR, pathname));
 
-  // Security check: ensure path is within APP_DIR
   if (!safePath.startsWith(APP_DIR)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden');
@@ -185,7 +210,6 @@ Output ONLY valid JSON without markdown fences.`;
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('404 Not Found');
-      console.log(`[404] ${req.method} ${req.url}`);
       return;
     }
 
@@ -198,7 +222,6 @@ Output ONLY valid JSON without markdown fences.`;
       if (readErr) {
         res.writeHead(500, { 'Content-Type': 'text/plain' });
         res.end('500 Internal Server Error');
-        console.error(`[500] ${req.method} ${req.url} - ${readErr.message}`);
         return;
       }
 
@@ -207,13 +230,9 @@ Output ONLY valid JSON without markdown fences.`;
 
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Access-Control-Allow-Origin': '*'
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       });
       res.end(content);
-      console.log(`[200] ${req.method} ${pathname} (${contentType})`);
     });
   });
 });
