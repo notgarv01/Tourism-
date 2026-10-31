@@ -265,12 +265,14 @@
 
         <!-- 2. Day Type -->
         <div class="control-group">
-          <div class="control-label">
+          <div class="control-label" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
             <span>Calendar Signal</span>
+            <span id="liveCalendarBadge" style="font-size:0.75rem; color:#9FE859; font-weight:700;">🟢 Auto: Live Indian Calendar</span>
           </div>
           <div class="segmented-control" id="dayTypeControl">
+            <button class="seg-btn active" id="btnCalendarAuto" data-day="auto">🌐 Auto (Live)</button>
             <button class="seg-btn" data-day="weekday">Weekday</button>
-            <button class="seg-btn active" data-day="weekend">Weekend (+30%)</button>
+            <button class="seg-btn" data-day="weekend">Weekend (+30%)</button>
             <button class="seg-btn" data-day="holiday">Festival (+45%)</button>
           </div>
         </div>

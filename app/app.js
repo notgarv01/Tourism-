@@ -1,3 +1,175 @@
+
+// ==========================================================================
+// PINPOINT ACCURACY ENGINES: CALENDAR, CLOSURES, SEASONALITY & BOTTLENECK ROADS
+// ==========================================================================
+
+// 1. Hyper-Local Narrow Entry Bottleneck Road Coordinates for TomTom
+const MONUMENT_BOTTLENECK_ROADS = {
+  "AGR_001": { point: [27.1658, 78.0463], name: "Taj East Gate & Fatehabad Corridor" },
+  "AGR_002": { point: [27.1795, 78.0211], name: "Yamuna Kinara Road" },
+  "UDR_001": { point: [24.5764, 73.6835], name: "Badi Pol & Jagdish Chowk" },
+  "UDR_002": { point: [24.5705, 73.6810], name: "Dudh Talai Waterfront Road" },
+  "JAI_001": { point: [26.9239, 75.8267], name: "Sireh Deori & Badi Chaupar" },
+  "JAI_002": { point: [26.9855, 75.8513], name: "Amer Fort Ascent Road" },
+  "VNS_001": { point: [25.3090, 83.0075], name: "Godowlia Chowk Bottleneck" },
+  "MUM_001": { point: [18.9220, 72.8347], name: "Colaba Causeway & Shivaji Marg" }
+};
+
+// 2. Strict Official Gate Closure Rules (e.g. Taj Mahal on Fridays)
+function checkMonumentClosure(dest) {
+  if (!dest) return { isClosed: false };
+
+  let dayOfWeek = new Date().getDay(); // 0 = Sun, 5 = Fri, 6 = Sat
+  let isSimulated = false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("simulateFriday") === "1") {
+      dayOfWeek = 5; // Force Friday for testing
+      isSimulated = true;
+    }
+  } catch (e) {}
+
+  const note = ((dest.recommendedDaysNote || "") + " " + (dest.description || "") + " " + (dest.name || "")).toLowerCase();
+
+  // Strict Rule 1: Taj Mahal is strictly closed to public visitors every Friday
+  if ((dest.id === "AGR_001" || dest.name.toLowerCase().includes("taj mahal")) && dayOfWeek === 5) {
+    return {
+      isClosed: true,
+      isSimulated,
+      reason: isSimulated ? "Official Friday Conservation & Maintenance (🧪 Simulation Active: ?simulateFriday=1)" : "Official Friday Conservation & Maintenance",
+      reopenDay: "Saturday 06:00 AM",
+      recommendedAlternative: "Agra Fort & Mehtab Bagh"
+    };
+  }
+
+  // Strict Rule 2: Red Fort (Delhi) is closed on Mondays
+  if ((dest.id === "DEL_001" || dest.name.toLowerCase().includes("red fort")) && dayOfWeek === 1) {
+    return {
+      isClosed: true,
+      reason: "Weekly Monday Closure",
+      reopenDay: "Tuesday 09:30 AM",
+      recommendedAlternative: "Humayun's Tomb & Qutub Minar"
+    };
+  }
+
+  // Generic closed note detection
+  if (note.includes("closed on fridays") && dayOfWeek === 5) {
+    return {
+      isClosed: true,
+      reason: "Weekly Friday Closure",
+      reopenDay: "Saturday Morning",
+      recommendedAlternative: "Nearby open attractions"
+    };
+  }
+  if (note.includes("closed on mondays") && dayOfWeek === 1) {
+    return {
+      isClosed: true,
+      reason: "Weekly Monday Closure",
+      reopenDay: "Tuesday Morning",
+      recommendedAlternative: "Nearby open attractions"
+    };
+  }
+
+  return { isClosed: false };
+}
+
+// 3. Indian Tourism Seasonal Footfall Multiplier (Peak Winter vs Summer)
+function getSeasonalMultiplier() {
+  const month = new Date().getMonth(); // 0 = Jan, 9 = Oct, 10 = Nov, 11 = Dec
+
+  // Peak Winter Tourism (Oct to Feb): Pleasant weather driving peak arrivals
+  if (month === 9 || month === 10 || month === 11 || month === 0 || month === 1) {
+    return {
+      multiplier: 1.25,
+      seasonName: "Peak Winter Season",
+      impact: "+25% Influx",
+      desc: "Prime winter season across Rajasthan, North India & coastal circuits."
+    };
+  }
+
+  // Moderate Shoulder Season (March & September)
+  if (month === 2 || month === 8) {
+    return {
+      multiplier: 1.0,
+      seasonName: "Shoulder Season",
+      impact: "Baseline (1.0x)",
+      desc: "Balanced footfalls across cultural circuits."
+    };
+  }
+
+  // Monsoon Season (July & August)
+  if (month === 6 || month === 7) {
+    return {
+      multiplier: 0.85,
+      seasonName: "Monsoon Season",
+      impact: "-15% Adjustment",
+      desc: "Lush greenery; reduced outdoor heritage walking."
+    };
+  }
+
+  // Summer Season (April, May, June): Scorching heat suppresses midday crowds
+  return {
+    multiplier: 0.70,
+    seasonName: "Summer Off-Peak",
+    impact: "-30% Heat Suppressed",
+    desc: "Afternoon temperatures 42°C+ heavily suppress outdoor monument walking."
+  };
+}
+
+// 4. Auto Indian Calendar & Festival Detector
+function detectIndianCalendarSignal() {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sun, 6 = Sat
+  const month = now.getMonth(); // 0 = Jan
+  const date = now.getDate();
+
+  // Gazetted Indian Holidays & Major Festivals
+  const holidayList = [
+    { m: 0, d: 26, name: "Republic Day" },
+    { m: 7, d: 15, name: "Independence Day" },
+    { m: 9, d: 2, name: "Gandhi Jayanti" },
+    { m: 9, d: 30, name: "Diwali Festivities" },
+    { m: 9, d: 31, name: "Diwali Weekend" },
+    { m: 10, d: 1, name: "Govardhan Puja / Holiday" },
+    { m: 10, d: 15, name: "Guru Nanak Jayanti" },
+    { m: 11, d: 25, name: "Christmas" },
+    { m: 11, d: 31, name: "New Year's Eve" },
+    { m: 0, d: 1, name: "New Year's Day" }
+  ];
+
+  const matched = holidayList.find(h => h.m === month && h.d === date);
+  if (matched) {
+    return { dayType: "holiday", summary: `🎉 ${matched.name} (+45% Peak)` };
+  }
+
+  if (day === 0 || day === 6) {
+    const dayName = day === 6 ? "Saturday" : "Sunday";
+    return { dayType: "weekend", summary: `🗓️ Today is ${dayName} (+30% Weekend)` };
+  }
+
+  const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  return { dayType: "weekday", summary: `📅 Today is ${weekdays[day]} (Weekday)` };
+}
+
+function applyAutoIndianCalendarSignal() {
+  if (!state.calendarAutoMode) return;
+  const sig = detectIndianCalendarSignal();
+  state.dayType = sig.dayType;
+
+  const badge = document.getElementById("liveCalendarBadge");
+  if (badge) {
+    badge.innerHTML = `🟢 Auto: <strong>${sig.summary}</strong>`;
+  }
+
+  const dayButtons = document.querySelectorAll("#dayTypeControl .seg-btn");
+  dayButtons.forEach(b => {
+    if (b.dataset.day === "auto") b.classList.add("active");
+    else b.classList.remove("active");
+  });
+
+  refreshAll();
+}
+
 // ==========================================================================
 // NORUSH TRAVEL ENGINE - LOGIC & INTERACTION CONTROLLER
 // Grounded in Unified_Smart_Tourism_Crowd_Prediction_Master_Blueprint.pdf
@@ -9,9 +181,11 @@ let state = {
   currentHour: "13:00",
   dayType: "weekend",       // weekday, weekend, holiday
   weather: "clear",         // clear, heat, rain
-  weatherAutoMode: true,    // True: Open-Meteo live API auto-controls weather; False: manual test
+  weatherAutoMode: true,
+  calendarAutoMode: true,    // True: Auto Indian calendar detects weekend/holiday from live date    // True: Open-Meteo live API auto-controls weather; False: manual test
   liveWeatherByCity: {},    // cityId -> { temp, precip, code, weatherType, summaryText }
-  liveTrafficByCity: {},    // cityId -> { delayMins, realDelayMins, curSpeed, freeSpeed, corridorName }
+  liveTrafficByCity: {},
+  liveBusynessByPlace: {}, // placeId -> { busyness, status, venue, timestamp }    // cityId -> { delayMins, realDelayMins, curSpeed, freeSpeed, corridorName }
   simulatedTrafficDelay: null, // null = live TomTom API; number = test rush hour
   selectedPlaceId: "AGR_001",
   activeCategory: "all",    // all, Historical, Lakes, Temples, Beaches, Nature, Others
@@ -32,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
   try { initMap(); } catch (e) { console.error("Error in initMap:", e); }
   try { initCitySelector(); } catch (e) { console.error("Error in initCitySelector:", e); }
   try { initControls(); } catch (e) { console.error("Error in initControls:", e); }
+  try { applyAutoIndianCalendarSignal(); } catch (e) { console.error("Error in applyAutoIndianCalendarSignal:", e); }
   try {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("simulateJam") === "1") {
@@ -115,7 +290,7 @@ function initLiveTelemetryPipeline() {
 }
 
 // Fetch live telemetry from TomTom Traffic Flow API for current city or coords
-async function fetchTomTomLiveTraffic(cityId, customCoords) {
+async function fetchTomTomLiveTraffic(cityId, customCoords, placeId) {
   try {
     let pt = [24.5764, 73.6835];
     let corridorName = "Pan-India Tourist Corridors";
@@ -366,9 +541,39 @@ function selectCity(cityId) {
 // Rule: If road delay > 10 min ⟹ Crowd Score automatically spikes +25%!
 // ==========================================================================
 function computeCrowdScore(dest) {
-  // A. Historical Baseline (35%)
+  // 0. Strict Official Gate Closure Check (e.g. Taj Mahal on Fridays)
+  const closure = checkMonumentClosure(dest);
+  if (closure.isClosed) {
+    return {
+      score: 0,
+      level: "Closed",
+      isClosed: true,
+      isSimulated: closure.isSimulated,
+      closureReason: closure.reason,
+      reopenDay: closure.reopenDay,
+      recommendedAlternative: closure.recommendedAlternative,
+      provenance: "OFFICIAL_REGULATION_CLOSURE",
+      baseScore: 0,
+      liveBusynessVal: 0,
+      histVal: 0,
+      calVal: 0,
+      eventVal: 0,
+      weatherVal: 0,
+      curWeatherType: "clear",
+      weatherSummary: "Closed for Routine Conservation",
+      delayMins: 0,
+      trafficSpike: 0,
+      trafficStateText: "Closed",
+      isTrafficBottleneck: false,
+      season: getSeasonalMultiplier()
+    };
+  }
+
+  // A. Historical Baseline (35%) + Indian Tourism Seasonal Multiplier
   const hourKey = state.currentHour;
-  const histVal = (dest.hourlyBaseline && dest.hourlyBaseline[hourKey]) ? dest.hourlyBaseline[hourKey] : 40;
+  const rawHist = (dest.hourlyBaseline && dest.hourlyBaseline[hourKey]) ? dest.hourlyBaseline[hourKey] : 40;
+  const season = getSeasonalMultiplier();
+  const histVal = Math.min(95, Math.round(rawHist * season.multiplier));
 
   // B. Calendar Signal (25%)
   let calVal = 20; // default weekday
@@ -621,6 +826,11 @@ function renderExplorer() {
 
         <!-- Real-Time Telemetry Breakdown Strip -->
         <div class="featured-telemetry-breakdown" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:10px 0; padding:10px 14px; background:rgba(0,0,0,0.25); border-radius:10px; border:1px solid rgba(255,255,255,0.08); font-size:0.78rem;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>🍂</span>
+            <span style="color:#A2B6AC;">Season:</span>
+            <strong style="color:#F59E0B;" title="${featCrowd.season ? featCrowd.season.desc : ''}">${featCrowd.season ? featCrowd.season.seasonName : 'Winter'} (${featCrowd.season ? featCrowd.season.impact : '+25%'})</strong>
+          </div>
           <div style="display:flex; align-items:center; gap:6px;">
             <span>🚦</span>
             <span style="color:#A2B6AC;">TomTom Road Delay:</span>
@@ -1227,12 +1437,41 @@ function updateRerouteAssistant() {
   const select = document.getElementById("headingPlaceSelect");
   const banner = document.getElementById("rerouteAlertBanner");
   if (!select || !banner) return;
-
   const placeId = select.value || "AGR_001";
   const dest = ALL_DESTINATIONS.find(d => d.id === placeId);
   if (!dest) return;
-
   const crowdData = computeCrowdScore(dest);
+
+  if (crowdData.isClosed) {
+    const altId = dest.alternatives && dest.alternatives.length > 0 ? dest.alternatives[0] : null;
+    const altDest = altId ? ALL_DESTINATIONS.find(d => d.id === altId) : null;
+    const switchBtnText = `Switch to ${altDest ? altDest.name.split(' ')[0] : 'Alternative'} &rarr;`;
+
+    banner.style.background = "#FEF2F2";
+    banner.style.border = "1px solid #FECACA";
+    banner.style.color = "#991B1B";
+    banner.innerHTML = `
+      <div style="display:flex; align-items:flex-start; gap:12px; max-width:760px;">
+        <span style="font-size:1.6rem; line-height:1;">⛔</span>
+        <div>
+          <div style="font-weight:700; font-size:0.95rem; color:#991B1B; margin-bottom:3px; display:flex; align-items:center; gap:8px;">
+            Official Closure Notice: ${dest.name} is STRICTLY CLOSED TODAY
+            ${crowdData.isSimulated ? `<span style="font-size:0.72rem; background:#EF4444; color:#FFF; padding:2px 8px; border-radius:10px; font-weight:700;">🧪 Friday Test Simulation Active</span>` : ''}
+          </div>
+          <div style="font-size:0.83rem; color:#7F1D1D; line-height:1.45;">
+            Reason: <strong>${crowdData.closureReason}</strong> (Reopens ${crowdData.reopenDay}). All visitor queues are redirected to <strong>${altDest ? altDest.name : crowdData.recommendedAlternative}</strong> &mdash; open right now with authentic royal heritage!
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        ${crowdData.isSimulated ? `<a href="/#predictions" class="btn-pill" style="padding:8px 14px; font-size:0.8rem; background:#10B981; color:#FFF; text-decoration:none; font-weight:700;">🔄 Exit to Real Today (Saturday)</a>` : ''}
+        ${altDest ? `<button class="btn-pill btn-pill-lime" style="padding:8px 16px; font-size:0.8rem;" onclick="selectDestination('${altDest.id}')">${switchBtnText}</button>` : ''}
+        <button class="btn-pill btn-pill-outline" style="padding:8px 14px; font-size:0.8rem; background:white;" onclick="document.getElementById('destinationsVisualGrid').scrollIntoView({behavior:'smooth'})">All Open Sites</button>
+      </div>
+    `;
+    return;
+  }
+
   const isHigh = crowdData.score >= 65;
 
   if (isHigh) {
@@ -1919,3 +2158,31 @@ async function triggerDynamicPanIndiaDiscovery(query) {
 
 
 
+
+// Google Places / BestTime Live Busyness API Integration
+async function fetchBestTimeLiveBusyness(dest) {
+  if (!dest || !dest.name) return;
+  if (!window.BESTTIME_API_KEY) return;
+  if (state.liveBusynessByPlace && state.liveBusynessByPlace[dest.id]) return;
+
+  try {
+    const venueName = dest.name;
+    const venueAddress = dest.displayLocation || `${dest.name}, India`;
+    const url = `https://besttime.app/api/v1/forecasts/live?api_key_private=${encodeURIComponent(window.BESTTIME_API_KEY)}&venue_name=${encodeURIComponent(venueName)}&venue_address=${encodeURIComponent(venueAddress)}`;
+    const res = await fetch(url, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.analysis && data.analysis.venue_live_busyness_available) {
+        state.liveBusynessByPlace[dest.id] = {
+          busyness: data.analysis.venue_live_busyness,
+          status: data.analysis.venue_live_busyness_text || "Live",
+          venue: venueName,
+          timestamp: Date.now()
+        };
+        renderExplorer();
+      }
+    }
+  } catch (err) {
+    console.warn("BestTime Live Busyness note:", err);
+  }
+}
