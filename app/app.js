@@ -562,7 +562,7 @@ function renderExplorer() {
   featuredContainer.innerHTML = `
     <div class="featured-place-card" id="card-${feat.id}">
       <div class="featured-image-box">
-        <img class="featured-img" data-place-id="${feat.id}" src="${getPlaceholderSvg()}" alt="${feat.name}" decoding="async" referrerpolicy="no-referrer">
+        <img class="featured-img" data-place-id="${feat.id}" src="${feat.image || getPlaceholderSvg()}" alt="${feat.name}" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
         <div class="featured-gradient-scrim"></div>
         <div class="badge-popular-choice">
           👑 ${feat.popularChoice ? 'Popular Choice' : 'Featured Highlight'} &bull; ${feat.cityName}
@@ -675,7 +675,7 @@ function renderExplorer() {
     card.id = `card-${dest.id}`;
     card.title = `Click to inspect ${dest.name} on map`;
     card.innerHTML = `
-      <img class="card-bg-img" data-place-id="${dest.id}" src="${getPlaceholderSvg()}" alt="${dest.name}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <img class="card-bg-img" data-place-id="${dest.id}" src="${dest.image || getPlaceholderSvg()}" alt="${dest.name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
       <div class="card-vignette-overlay"></div>
       ${dest.isDynamicDiscovery ? '<div class="dynamic-sparkle-badge">✨ Live Discovery</div>' : ''}
       
@@ -966,7 +966,7 @@ function renderItinerary() {
     card.innerHTML = `
       <div class="step-time">${stop.time} &bull; STOP ${stop.stopIndex}</div>
       <div style="display:flex; align-items:center; gap:10px; margin:6px 0 8px;">
-        <img src="${getPlaceholderSvg()}" data-place-id="${stop.placeId}" alt="${name}" decoding="async" style="width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.15); flex-shrink:0;">
+        <img src="${(ALL_DESTINATIONS.find(d => d.id === stop.placeId)?.image) || getPlaceholderSvg()}" data-place-id="${stop.placeId}" alt="${name}" decoding="async" style="width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.15); flex-shrink:0;" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
         <div class="step-name" style="margin:0; font-size:1.05rem;">${name}</div>
       </div>
       <p style="font-size:0.75rem; color:#A2B6AC; margin-bottom:8px;">${desc}</p>
@@ -1057,7 +1057,7 @@ function openAlternativeModal(placeId) {
     item.style.cssText = "background:#FAF7F0; border:1px solid #EBE6DA; border-radius:16px; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;";
     item.innerHTML = `
       <div style="display:flex; align-items:center; gap:14px;">
-        <img src="${getPlaceholderSvg()}" data-place-id="${cand.id}" alt="${cand.name}" decoding="async" style="width:58px; height:58px; border-radius:12px; object-fit:cover; border:1px solid #E2DCCE; flex-shrink:0;">
+        <img src="${cand.image || getPlaceholderSvg()}" data-place-id="${cand.id}" alt="${cand.name}" decoding="async" style="width:58px; height:58px; border-radius:12px; object-fit:cover; border:1px solid #E2DCCE; flex-shrink:0;" onerror="this.onerror=null; this.src='images/AGR_001.jpg';">
         <div>
           <div style="display:flex; align-items:center; gap:8px;">
             <strong style="font-size:1.05rem; font-family:'Fraunces', serif;">${cand.name}</strong>
@@ -1430,30 +1430,28 @@ function initCardImageObserver() {
 async function loadLiveImageForElement(imgEl, placeId) {
   if (!imgEl || !placeId) return;
 
-  const meta = DEST_IMAGE_METADATA[placeId] || {};
-  const wikiTitle = meta.title;
-  const unsplashQuery = meta.query || (wikiTitle ? wikiTitle.replace(/_/g, ' ') : placeId);
+  const destObj = (typeof ALL_DESTINATIONS !== "undefined") ? ALL_DESTINATIONS.find(d => d.id === placeId) : null;
+  const localImage = (destObj && destObj.image) ? destObj.image : (destObj?.isDynamicDiscovery ? 'images/AGR_001.jpg' : `images/${placeId}.jpg`);
 
-  // Setup smart onerror fallback to Unsplash if initial src fails
+  // Bulletproof error fallback: never leave a broken image icon
   imgEl.onerror = () => {
     imgEl.onerror = null;
-    const unsplashKey = window.UNSPLASH_ACCESS_KEY || "NajbVz2htBZi8vvz88XJ0L7VFj4OAWhzqV1L-EdHJsA";
-    if (unsplashKey && unsplashQuery) {
-      fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(unsplashQuery)}&client_id=${unsplashKey}&orientation=landscape&per_page=1`)
-        .then(r => r.json())
-        .then(d => {
-          if (d.results && d.results.length > 0) {
-            const uUrl = d.results[0].urls.regular || d.results[0].urls.small;
-            runtimeSessionImageCache.set(placeId, uUrl);
-            imgEl.src = uUrl;
-            imgEl.classList.add("image-loaded");
-          }
-        })
-        .catch(() => {});
+    if (imgEl.src !== localImage && !imgEl.src.endsWith(encodeURI(localImage))) {
+      imgEl.src = localImage;
+    } else {
+      imgEl.src = 'images/AGR_001.jpg';
     }
+    imgEl.classList.add("image-loaded");
   };
 
-  // 1. In-memory session cache: return instantly if already fetched in this session
+  // 1. Direct High-Resolution Authentic Local Asset (Instant, 100% reliable)
+  if (destObj && destObj.image && !destObj.isDynamicDiscovery) {
+    imgEl.src = destObj.image;
+    imgEl.classList.add("image-loaded");
+    return;
+  }
+
+  // 2. In-memory session cache: return instantly if already fetched in this session
   if (runtimeSessionImageCache.has(placeId)) {
     const cachedUrl = runtimeSessionImageCache.get(placeId);
     imgEl.src = cachedUrl;
@@ -1461,7 +1459,11 @@ async function loadLiveImageForElement(imgEl, placeId) {
     return;
   }
 
-  // 2. Primary: Real-time query to Wikipedia REST API
+  const meta = DEST_IMAGE_METADATA[placeId] || {};
+  const wikiTitle = meta.title;
+  const unsplashQuery = meta.query || (wikiTitle ? wikiTitle.replace(/_/g, ' ') : placeId);
+
+  // 3. Primary for Dynamic Discovery: Real-time query to Wikipedia REST API
   if (wikiTitle) {
     try {
       const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`;
@@ -1469,10 +1471,10 @@ async function loadLiveImageForElement(imgEl, placeId) {
       if (resp.ok) {
         const data = await resp.json();
         let liveUrl = null;
-        if (data.thumbnail && data.thumbnail.source) {
-          liveUrl = data.thumbnail.source.replace(/\/\d+px-/, '/800px-');
-        } else if (data.originalimage && data.originalimage.source) {
+        if (data.originalimage && data.originalimage.source) {
           liveUrl = data.originalimage.source;
+        } else if (data.thumbnail && data.thumbnail.source) {
+          liveUrl = data.thumbnail.source;
         }
         if (liveUrl) {
           runtimeSessionImageCache.set(placeId, liveUrl);
@@ -1486,7 +1488,7 @@ async function loadLiveImageForElement(imgEl, placeId) {
     }
   }
 
-  // 3. Fallback: Query Unsplash Search API in real-time
+  // 4. Secondary: Query Unsplash Search API in real-time
   const unsplashKey = window.UNSPLASH_ACCESS_KEY || "NajbVz2htBZi8vvz88XJ0L7VFj4OAWhzqV1L-EdHJsA";
   if (unsplashKey && unsplashQuery) {
     try {
@@ -1507,9 +1509,8 @@ async function loadLiveImageForElement(imgEl, placeId) {
     }
   }
 
-  // 4. Safe offline fallback if both external networks fail
-  const destObj = (typeof ALL_DESTINATIONS !== "undefined") ? ALL_DESTINATIONS.find(d => d.id === placeId) : null;
-  imgEl.src = (destObj && destObj.image) ? destObj.image : (destObj?.isDynamicDiscovery ? 'images/AGR_001.jpg' : `images/${placeId}.jpg`);
+  // 5. Ultimate offline fallback
+  imgEl.src = localImage;
   imgEl.classList.add("image-loaded");
 }
 
@@ -1544,21 +1545,58 @@ function showDiscoveryToast(htmlContent) {
   }, 4500);
 }
 
+function getCategoryFallbackImage(category) {
+  switch (category) {
+    case "Temples":
+      return "images/JagdishTemple.jpg";
+    case "Lakes":
+      return "images/FatehSagarLake.jpg";
+    case "Beaches":
+      return "images/GOA_002.jpg";
+    case "Nature":
+      return "images/HIM_003.jpg";
+    case "Others":
+      return "images/Shilpgram.jpg";
+    case "Historical":
+    default:
+      return "images/DEL_001.jpg";
+  }
+}
+
 function inferCategoryFromText(text) {
   const t = (text || "").toLowerCase();
-  if (/temple|mandir|gurdwara|shrine|mosque|masjid|church|cathedral|basilica|dargah|stupa|monastery/.test(t)) {
+  
+  // 1. Temples & Spiritual
+  if (/temple|mandir|gurdwara|gurudwara|shrine|mosque|masjid|church|cathedral|basilica|dargah|stupa|monastery|ashram|spiritual|jyotirlinga|matha|synagogue|pagoda|devalaya/.test(t)) {
     return "Temples";
   }
-  if (/lake|river|waterfall|falls|ghat|dam|reservoir|backwater/.test(t)) {
+  
+  // 2. Lakes & Waterfronts
+  if (/lake|talai|sagar|river|waterfall|falls|waterfront|dam|reservoir|backwater|canal|pond|estuary|stream/.test(t)) {
     return "Lakes";
   }
-  if (/beach|coast|cove|sea|ocean|island/.test(t)) {
+  
+  // 3. Beaches & Coastal
+  if (/beach|coast|cove|sea|ocean|island|shoreline|promenade|coastline/.test(t)) {
     return "Beaches";
   }
-  if (/park|sanctuary|wildlife|zoo|garden|forest|valley|hills|mountain|pass|peak|flora/.test(t)) {
+  
+  // 4. Nature, Wildlife, Hills & Parks
+  if (/wildlife|sanctuary|national park|safari|zoo|forest|valley|hills|hill station|mountain|pass|peak|flora|ridge|canyon|caves|trek|plantation|botanical/.test(t)) {
     return "Nature";
   }
-  return "Historical";
+  
+  // 5. Markets, Shopping, Neighborhoods, Urban, Cultural, Museums & Others
+  if (/market|bazaar|bazar|shopping|retail|mall|emporium|commercial|neighborhood|neighbourhood|locality|colony|nagar|street|road|chowk|haat|mandi|bazaars|food|cuisine|eatery|restaurant|cafe|craft|handicraft|arts|museum|gallery|aquarium|observatory|planetarium|amusement|stadium|theatre|theater|plaza|hall|bhavan|complex/.test(t)) {
+    return "Others";
+  }
+  
+  // 6. Historical & Forts
+  if (/fort|palace|qila|mahal|castle|tomb|cenotaph|chhatri|ruins|ancient|archaeolog|dynasty|empire|citadel|haveli|darwaza|minar|pillar|stepwell|baoli|monument|memorial|historic/.test(t)) {
+    return "Historical";
+  }
+  
+  return "Others";
 }
 
 function generateDynamicHourlyBaseline(category) {
@@ -1572,7 +1610,14 @@ function generateDynamicHourlyBaseline(category) {
       "08:00": 10, "09:00": 22, "10:00": 38, "11:00": 45, "12:00": 40,
       "14:00": 42, "15:00": 58, "16:00": 78, "17:00": 92, "18:00": 88, "19:00": 62, "20:00": 30
     };
+  } else if (category === "Others") {
+    // Markets, shopping, urban hubs peak late afternoon & evening
+    return {
+      "08:00": 10, "09:00": 18, "10:00": 32, "11:00": 48, "12:00": 60,
+      "13:00": 65, "14:00": 55, "15:00": 62, "16:00": 75, "17:00": 88, "18:00": 95, "19:00": 90, "20:00": 70
+    };
   } else {
+    // Historical monuments
     return {
       "08:00": 12, "09:00": 30, "10:00": 60, "11:00": 82, "12:00": 90,
       "13:00": 86, "14:00": 78, "15:00": 70, "16:00": 55, "17:00": 36, "18:00": 16
@@ -1658,23 +1703,88 @@ async function triggerDynamicPanIndiaDiscovery(query) {
       coords = [22.8, 79.2]; // Pan-India geographic center fallback
     }
 
-    // Step D: Live Image Resolution (Wikipedia primary -> Unsplash fallback)
+    // Step D: Live Image Resolution (Multi-Layer Deep Resolver)
     let liveImgUrl = null;
-    if (summaryData.thumbnail && summaryData.thumbnail.source) {
-      liveImgUrl = summaryData.thumbnail.source.replace(/\/\d+px-/, '/800px-');
-    } else if (summaryData.originalimage && summaryData.originalimage.source) {
+
+    // Layer 1: Wikipedia Summary thumbnail/original (Direct without broken /800px- rewrite)
+    if (summaryData.originalimage && summaryData.originalimage.source) {
       liveImgUrl = summaryData.originalimage.source;
+    } else if (summaryData.thumbnail && summaryData.thumbnail.source) {
+      liveImgUrl = summaryData.thumbnail.source;
     }
 
-    // Fallback to Unsplash API if Wikipedia has no image
+    // Layer 2: Deep Article Media / Wikimedia Commons Files
+    if (!liveImgUrl) {
+      try {
+        const artUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(topTitle)}&prop=images&format=json&origin=*`;
+        const artResp = await fetch(artUrl);
+        if (artResp.ok) {
+          const artData = await artResp.json();
+          const pages = artData?.query?.pages || {};
+          const page = Object.values(pages)[0];
+          const imgs = page?.images || [];
+          const candidates = imgs.filter(i => 
+            !/\.(svg|png)$/i.test(i.title) && 
+            !/flag|icon|map|ambox|stub|symbol|pog|logo|button|wikimedia/i.test(i.title)
+          );
+          if (candidates.length > 0) {
+            const infoUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(candidates[0].title)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
+            const infoResp = await fetch(infoUrl);
+            if (infoResp.ok) {
+              const infoData = await infoResp.json();
+              const infoPages = infoData?.query?.pages || {};
+              const infoPage = Object.values(infoPages)[0];
+              const resolvedUrl = infoPage?.imageinfo?.[0]?.url;
+              if (resolvedUrl) {
+                liveImgUrl = resolvedUrl;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[Wikipedia Deep Media] Fallback failed for", topTitle, e);
+      }
+    }
+
+    // Layer 3: Wikimedia Commons Direct Search
+    if (!liveImgUrl) {
+      try {
+        const commUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(topTitle + ' India')}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
+        const commResp = await fetch(commUrl);
+        if (commResp.ok) {
+          const commData = await commResp.json();
+          const commPages = Object.values(commData?.query?.pages || {});
+          for (const cp of commPages) {
+            const rawUrl = cp?.imageinfo?.[0]?.url;
+            if (rawUrl && !/\.(svg|png)$/i.test(rawUrl)) {
+              liveImgUrl = rawUrl;
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Layer 4: Unsplash API Search
     if (!liveImgUrl && window.UNSPLASH_ACCESS_KEY) {
       try {
-        const uUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(topTitle + " India")}&client_id=${window.UNSPLASH_ACCESS_KEY}&orientation=landscape&per_page=1`;
-        const uResp = await fetch(uUrl);
+        let uUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(topTitle)}&client_id=${window.UNSPLASH_ACCESS_KEY}&orientation=landscape&per_page=1`;
+        let uResp = await fetch(uUrl);
         if (uResp.ok) {
-          const uData = await uResp.json();
+          let uData = await uResp.json();
           if (uData.results && uData.results.length > 0) {
             liveImgUrl = uData.results[0].urls.regular || uData.results[0].urls.small;
+          } else {
+            // Secondary category/city query
+            const fallbackQuery = `${inferredCity} ${inferredCat === 'Others' ? 'market' : inferredCat}`;
+            uUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(fallbackQuery)}&client_id=${window.UNSPLASH_ACCESS_KEY}&orientation=landscape&per_page=1`;
+            uResp = await fetch(uUrl);
+            if (uResp.ok) {
+              uData = await uResp.json();
+              if (uData.results && uData.results.length > 0) {
+                liveImgUrl = uData.results[0].urls.regular || uData.results[0].urls.small;
+              }
+            }
           }
         }
       } catch (e) {}
@@ -1692,6 +1802,7 @@ async function triggerDynamicPanIndiaDiscovery(query) {
     }
 
     const inferredCat = inferCategoryFromText(fullText);
+    const displayCat = inferredCat === "Others" ? "Markets & Urban" : inferredCat;
 
     // Step F: Build Dynamic Destination Object
     const dynId = `IND_${Date.now()}`;
@@ -1703,9 +1814,9 @@ async function triggerDynamicPanIndiaDiscovery(query) {
       state: "India",
       displayLocation: summaryData.description || `${summaryData.title}, ${inferredCity}`,
       category: inferredCat,
-      experienceTags: ["pan_india_discovery", "real_time_telemetry", "heritage"],
-      tags: ["Pan-India", inferredCat, inferredCity],
-      primaryIntent: inferredCat.toLowerCase(),
+      experienceTags: [inferredCat === "Others" ? "shopping_and_urban" : inferredCat.toLowerCase(), "pan_india_discovery", "live_telemetry"],
+      tags: ["Pan-India", displayCat, inferredCity],
+      primaryIntent: inferredCat === "Others" ? "shopping_and_urban" : inferredCat.toLowerCase(),
       coords: coords,
       openingHours: { open: "08:00", close: "18:30", lastEntry: "17:30" },
       avgVisitDurationMin: 120,
@@ -1719,7 +1830,7 @@ async function triggerDynamicPanIndiaDiscovery(query) {
       recommendedDaysNote: "(Lower Crowds)",
       fragilityIndex: 0.35,
       accessibility: { wheelchair: "Yes", stairs: "Moderate" },
-      image: liveImgUrl || 'images/AGR_001.jpg',
+      image: liveImgUrl || getCategoryFallbackImage(inferredCat),
       wikiTitle: topTitle,
       description: summaryData.extract || `Real-time generated intelligence card for ${summaryData.title}.`,
       hourlyBaseline: generateDynamicHourlyBaseline(inferredCat),
